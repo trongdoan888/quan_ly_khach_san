@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Hotel Reservation System includes automated setup and start scripts for Windows (CMD, PowerShell) and Linux/macOS (Bash). These scripts simplify the installation and running process.
+The Hotel Reservation System includes automated setup and start scripts for Windows (CMD, PowerShell) and Linux/macOS (Bash). These scripts simplify the installation and running process. The start scripts automatically clean up existing processes before starting new instances.
 
 ## Scripts Available
 
@@ -15,11 +15,6 @@ The Hotel Reservation System includes automated setup and start scripts for Wind
 - `start.bat` - Windows CMD start script
 - `start.ps1` - Windows PowerShell start script
 - `start.sh` - Linux/macOS Bash start script
-
-### Stop Scripts
-- `stop.bat` - Windows CMD stop script
-- `stop.ps1` - Windows PowerShell stop script
-- `stop.sh` - Linux/macOS Bash stop script
 
 ## Key Features
 
@@ -44,7 +39,7 @@ All scripts ensure they:
 ### Execute Permissions
 For Linux/macOS users, scripts must be made executable:
 ```bash
-chmod +x setup.sh start.sh stop.sh
+chmod +x setup.sh start.sh
 ```
 
 The scripts are created with execute permissions in the repository, but users may need to set them manually depending on their system configuration.
@@ -207,6 +202,7 @@ Run services in background with nohup.
 - Saves process IDs to PID files
 - Writes logs to `backend.log` and `frontend.log`
 - Allows terminal to be closed while services run
+- Note: Running start script again will automatically kill existing processes
 
 ### Combined Options
 All options can be combined:
@@ -221,21 +217,6 @@ All options can be combined:
 # Remote access in background
 .\start.ps1 --remote --bck
 ```
-
-## Stop Script
-
-The stop script stops all running services.
-
-**Usage:**
-```powershell
-.\stop.ps1
-```
-
-**What it does:**
-- Reads process IDs from PID files
-- Gracefully terminates backend and frontend processes
-- Cleans up PID files
-- Falls back to process name matching if PIDs not found
 
 ## Platform-Specific Notes
 
@@ -260,7 +241,7 @@ The stop script stops all running services.
 .\setup.ps1 --postgres --create-su
 
 # Linux/macOS
-chmod +x setup.sh start.sh stop.sh
+chmod +x setup.sh start.sh
 ./setup.sh --postgres --create-su
 ```
 
@@ -280,15 +261,6 @@ chmod +x setup.sh start.sh stop.sh
 
 # Linux/macOS
 ./start.sh --remote --postgres --bck
-```
-
-### Stopping Services
-```powershell
-# Windows
-.\stop.ps1
-
-# Linux/macOS
-./stop.sh
 ```
 
 ### Troubleshooting
@@ -335,7 +307,7 @@ The scripts include comprehensive error handling:
 
 ### Port Already in Use
 If you get "port already in use" errors:
-1. Run the stop script: `.\stop.ps1`
+1. The start script automatically kills existing processes
 2. Check for other processes using the ports
 3. Kill conflicting processes manually
 

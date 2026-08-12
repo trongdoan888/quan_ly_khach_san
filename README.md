@@ -71,7 +71,7 @@ Reservations
 
 ## 📜 Setup & Start Scripts
 
-The project includes automated setup and start scripts for Windows (CMD, PowerShell) and Linux/macOS (Bash).
+The project includes automated setup and start scripts for Windows (CMD, PowerShell) and Linux/macOS (Bash). The start scripts automatically clean up existing processes before starting.
 
 ### Quick Start
 
@@ -80,11 +80,8 @@ The project includes automated setup and start scripts for Windows (CMD, PowerSh
 REM Setup
 setup.bat
 
-REM Start
+REM Start (automatically kills existing processes)
 start.bat
-
-REM Stop
-stop.bat
 ```
 
 **Windows (PowerShell):**
@@ -92,26 +89,20 @@ stop.bat
 # Setup
 .\setup.ps1
 
-# Start
+# Start (automatically kills existing processes)
 .\start.ps1
-
-# Stop
-.\stop.ps1
 ```
 
 **Linux/macOS (Bash):**
 ```bash
 # Make scripts executable
-chmod +x setup.sh start.sh stop.sh
+chmod +x setup.sh start.sh
 
 # Setup
 ./setup.sh
 
-# Start
+# Start (automatically kills existing processes)
 ./start.sh
-
-# Stop
-./stop.sh
 ```
 
 ### Setup Script Options
