@@ -123,7 +123,7 @@ setup.bat --dev
 Check if everything is installed without making changes.
 
 ### --skip-node
-Skip Node.js installation. Use this if Node.js is already installed or if you want to install it manually.
+Skip Node.js check and proceed with backend-only setup. Use this if you want to set up only the backend without the frontend.
 
 **Usage:**
 ```cmd

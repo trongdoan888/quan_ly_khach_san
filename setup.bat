@@ -2,7 +2,9 @@
 REM Hotel Reservation System - Setup Script (Windows CMD)
 REM Usage: setup.bat [options]
 
-setlocal enabledelayedexpansion
+REM Get script directory and save original directory
+set SCRIPT_DIR=%~dp0
+set ORIGINAL_DIR=%cd%
 
 REM Initialize variables
 set POSTGRES=false
@@ -61,8 +63,7 @@ echo Unknown option: %~1
 exit /b 1
 :done_parsing
 
-REM Get script directory
-set SCRIPT_DIR=%~dp0
+REM Set directory paths
 set BACKEND_DIR=%SCRIPT_DIR%backend
 set FRONTEND_DIR=%SCRIPT_DIR%frontend
 
@@ -94,108 +95,21 @@ if errorlevel 1 (
 where node >nul 2>&1
 if errorlevel 1 (
     echo [WARNING] Node.js is not installed
+    echo [INFO] Please install Node.js manually to enable frontend setup
+    echo [INFO] Download Node.js LTS from: https://nodejs.org/
+    echo [INFO] After installation, restart your terminal and run setup again
+    echo [INFO] Or use --skip-node flag to skip Node.js installation (backend only)
     if "%SKIP_NODE%"=="false" (
-        echo [INFO] Attempting to install Node.js using nvm-windows...
-        
-        REM Check if nvm is installed
-        where nvm >nul 2>&1
-        if errorlevel 1 (
-            echo [INFO] nvm-windows not found, installing nvm-windows...
-            if not "%CHECK%"=="true" (
-                REM Download nvm-windows installer
-                echo Downloading nvm-windows installer...
-                powershell -Command "Invoke-WebRequest -Uri 'https://github.com/coreybutler/nvm-windows/releases/download/1.1.12/nvm-setup.exe' -OutFile 'nvm-setup.exe'"
-                if errorlevel 1 (
-                    echo [ERROR] Failed to download nvm-windows installer
-                    echo [INFO] Attempting direct Node.js installation...
-                    goto :direct_node_install
-                )
-                
-                REM Install nvm-windows
-                echo Installing nvm-windows...
-                nvm-setup.exe
-                if errorlevel 1 (
-                    echo [WARNING] nvm-windows installation may have issues, trying direct Node.js installation
-                    del nvm-setup.exe 2>nul
-                    goto :direct_node_install
-                )
-                
-                REM Clean up installer
-                del nvm-setup.exe 2>nul
-                
-                REM Refresh environment variables
-                echo Refreshing environment variables...
-                call refreshenv 2>nul || set "PATH=%PATH%;%USERPROFILE%\nvm"
-                
-                REM Install Node.js using nvm
-                echo Installing Node.js using nvm...
-                nvm install 18
-                if errorlevel 1 (
-                    echo [WARNING] Failed to install Node.js using nvm, trying direct installation
-                    goto :direct_node_install
-                )
-                
-                nvm use 18
-                echo [SUCCESS] Node.js installed via nvm-windows
-            )
-        ) else (
-            echo [INFO] nvm-windows found, installing Node.js...
-            if not "%CHECK%"=="true" (
-                nvm install 18
-                if errorlevel 1 (
-                    echo [WARNING] Failed to install Node.js using nvm, trying direct installation
-                    goto :direct_node_install
-                )
-                nvm use 18
-                echo [SUCCESS] Node.js installed via nvm-windows
-            )
-        )
-        goto :node_install_complete
-        
-        :direct_node_install
-        echo [INFO] Attempting direct Node.js installation...
-        if not "%CHECK%"=="true" (
-            REM Download Node.js installer
-            echo Downloading Node.js installer...
-            powershell -Command "Invoke-WebRequest -Uri 'https://nodejs.org/dist/v18.17.0/node-v18.17.0-x64.msi' -OutFile 'node-installer.msi'"
-            if errorlevel 1 (
-                echo [ERROR] Failed to download Node.js installer
-                echo [INFO] Please install Node.js manually from https://nodejs.org/
-                cd /d "%ORIGINAL_DIR%"
-                exit /b 1
-            )
-            
-            REM Install Node.js
-            echo Installing Node.js...
-            msiexec /i node-installer.msi /quiet /norestart
-            if errorlevel 1 (
-                echo [ERROR] Failed to install Node.js
-                del node-installer.msi 2>nul
-                echo [INFO] Please install Node.js manually from https://nodejs.org/
-                cd /d "%ORIGINAL_DIR%"
-                exit /b 1
-            )
-            
-            REM Clean up installer
-            del node-installer.msi 2>nul
-            
-            REM Refresh environment variables
-            echo Refreshing environment variables...
-            call refreshenv 2>nul || set "PATH=%PATH%;C:\Program Files\nodejs"
-            
-            echo [SUCCESS] Node.js installed directly
-        )
-        
-        :node_install_complete
-        echo [INFO] Node.js installation completed
-    ) else (
-        echo [WARNING] Skipping Node.js installation (--skip-node flag)
+        cd /d "%ORIGINAL_DIR%"
+        exit /b 1
     )
 ) else (
     echo [SUCCESS] Node.js is already installed
     node --version
     npm --version
 )
+
+echo [SUCCESS] Prerequisites check complete
 echo .
 
 REM Backend Setup
@@ -205,6 +119,7 @@ echo ========================================
 
 if not exist "%BACKEND_DIR%" (
     echo [ERROR] Backend directory not found: %BACKEND_DIR%
+    cd /d "%ORIGINAL_DIR%"
     exit /b 1
 )
 
@@ -303,19 +218,14 @@ if "%SKIP_DEPS%"=="false" (
     echo [WARNING] Skipping Python dependency installation
 )
 
-REM Configure database
+REM Configure database if needed
 if "%POSTGRES%"=="true" (
     echo Configuring for PostgreSQL...
     set ENV_FILE=%BACKEND_DIR%.env
     if exist "%ENV_FILE%" (
-        echo Updating .env for PostgreSQL...
-        if not "%CHECK%"=="true" (
-            powershell -Command "(Get-Content '%ENV_FILE%') -replace 'DB_NAME=.*', 'DB_NAME=hotel_reservation' -replace 'DB_USER=.*', 'DB_USER=postgres' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=postgres' -replace 'DB_HOST=.*', 'DB_HOST=localhost' -replace 'DB_PORT=.*', 'DB_PORT=5432' | Set-Content '%ENV_FILE%'"
-        )
+        powershell -Command "(Get-Content '%ENV_FILE%') -replace 'DB_NAME=.*', 'DB_NAME=hotel_reservation' -replace 'DB_USER=.*', 'DB_USER=postgres' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=postgres' -replace 'DB_HOST=.*', 'DB_HOST=localhost' -replace 'DB_PORT=.*', 'DB_PORT=5432' | Set-Content '%ENV_FILE%'"
     )
-    echo [SUCCESS] PostgreSQL configuration applied
-) else (
-    echo Using SQLite (default)
+    echo [SUCCESS] PostgreSQL configured
 )
 
 REM Run migrations
@@ -334,7 +244,7 @@ if not "%CHECK%"=="true" (
         exit /b 1
     )
 )
-echo [SUCCESS] Database migrations complete
+echo [SUCCESS] Database migrations completed
 
 REM Create superuser
 if "%CREATE_SU%"=="true" (
@@ -436,24 +346,13 @@ echo ========================================
 echo Setup Complete!
 echo ========================================
 echo.
-echo [SUCCESS] Backend: %BACKEND_DIR%
-echo [SUCCESS] Frontend: %FRONTEND_DIR%
+echo Backend setup: Complete
+if not errorlevel 1 (
+    echo Frontend setup: Complete
+) else (
+    echo Frontend setup: Skipped (Node.js not installed)
+)
 echo.
-echo Configuration:
-echo   Database: %POSTGRES%
-echo   Superuser: %CREATE_SU%
-echo   Dependencies: %SKIP_DEPS%
-echo   Static Files: %NO_COLLECTSTATIC%
+echo To start the application, run:
+echo   start.bat
 echo.
-echo Next steps:
-echo   1. Run start script: start.bat [options]
-echo   2. Or start manually:
-echo      Backend: cd backend && venv\Scripts\python manage.py runserver
-echo      Frontend: cd frontend && npm run dev
-echo.
-echo Demo credentials:
-echo   Admin: admin / admin123
-echo   Staff: staff / staff123
-echo.
-
-endlocal

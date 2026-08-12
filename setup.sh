@@ -113,41 +113,13 @@ fi
 
 if ! command -v node &> /dev/null; then
     echo_warning "Node.js is not installed"
+    echo_info "Please install Node.js manually to enable frontend setup"
+    echo_info "Download Node.js LTS from: https://nodejs.org/"
+    echo_info "After installation, run setup again"
+    echo_info "Or use --skip-node flag to skip Node.js installation (backend only)"
     if [ "$SKIP_NODE" = false ]; then
-        echo_info "Attempting to install Node.js using nvm..."
-        
-        # Check if nvm is installed
-        if command -v nvm &> /dev/null; then
-            echo_info "nvm found, installing Node.js..."
-            if [ "$CHECK" = false ]; then
-                nvm install 18
-                nvm use 18
-                echo_success "Node.js installed via nvm"
-            fi
-        else
-            echo_info "nvm not found, installing nvm..."
-            if [ "$CHECK" = false ]; then
-                # Install nvm
-                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-                if [ $? -eq 0 ]; then
-                    # Source nvm
-                    export NVM_DIR="$HOME/.nvm"
-                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                    
-                    # Install Node.js
-                    nvm install 18
-                    nvm use 18
-                    echo_success "Node.js installed via nvm"
-                else
-                    echo_error "Failed to install nvm"
-                    echo_info "Please install Node.js manually from https://nodejs.org/"
-                    cd "$ORIGINAL_DIR"
-                    exit 1
-                fi
-            fi
-        fi
-    else
-        echo_warning "Skipping Node.js installation (--skip-node flag)"
+        cd "$ORIGINAL_DIR"
+        exit 1
     fi
 else
     echo_success "Node.js is already installed"
