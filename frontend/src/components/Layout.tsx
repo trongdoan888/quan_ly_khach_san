@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { addToast } = useToast();
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -16,7 +18,12 @@ const Layout: React.FC = () => {
   ];
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+      addToast('success', 'Logged out successfully');
+    } catch (error) {
+      addToast('error', 'Failed to logout');
+    }
   };
 
   return (

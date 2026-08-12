@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { reservationService, DashboardStats } from '../services/reservationService';
 import { useToast } from '../contexts/ToastContext';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const { addToast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchStats();
@@ -180,19 +182,51 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="card-body">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }}>
+              <button 
+                className="btn btn-secondary" 
+                style={{ justifyContent: 'flex-start' }}
+                onClick={() => {
+                  addToast('info', 'Navigating to Reservations page');
+                  navigate('/reservations');
+                }}
+              >
                 <span>➕</span> New Reservation
               </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }}>
+              <button 
+                className="btn btn-secondary" 
+                style={{ justifyContent: 'flex-start' }}
+                onClick={() => {
+                  addToast('info', 'Navigating to Customers page');
+                  navigate('/customers');
+                }}
+              >
                 <span>👤</span> Add Customer
               </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }}>
+              <button 
+                className="btn btn-secondary" 
+                style={{ justifyContent: 'flex-start' }}
+                onClick={() => {
+                  addToast('info', 'Navigating to Rooms page');
+                  navigate('/rooms');
+                }}
+              >
                 <span>🏠</span> Add Room
               </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }}>
+              <button 
+                className="btn btn-secondary" 
+                style={{ justifyContent: 'flex-start' }}
+                onClick={() => {
+                  addToast('info', 'Navigating to Availability page');
+                  navigate('/availability');
+                }}
+              >
                 <span>🔍</span> Check Availability
               </button>
-              <button className="btn btn-secondary" style={{ justifyContent: 'flex-start' }}>
+              <button 
+                className="btn btn-secondary" 
+                style={{ justifyContent: 'flex-start' }}
+                onClick={() => addToast('info', 'Reports feature coming soon!')}
+              >
                 <span>📊</span> View Reports
               </button>
             </div>
