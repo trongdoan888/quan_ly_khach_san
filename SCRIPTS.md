@@ -122,6 +122,9 @@ setup.bat --dev
 ### --check
 Check if everything is installed without making changes.
 
+### --skip-node
+Skip Node.js installation. Use this if Node.js is already installed or if you want to install it manually.
+
 **Usage:**
 ```cmd
 setup.bat --check

@@ -110,6 +110,7 @@ start.bat
 | `--no-collectstatic` | Skip static files collection |
 | `--dev` | Install development dependencies |
 | `--check` | Check if everything is installed without making changes |
+| `--skip-node` | Skip Node.js installation (use if already installed) |
 
 **Examples:**
 ```powershell

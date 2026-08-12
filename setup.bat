@@ -12,6 +12,7 @@ set FORCE=false
 set NO_COLLECTSTATIC=false
 set DEV=false
 set CHECK=false
+set SKIP_NODE=false
 
 REM Parse arguments
 :parse_args
@@ -51,6 +52,11 @@ if /i "%~1"=="--check" (
     shift
     goto parse_args
 )
+if /i "%~1"=="--skip-node" (
+    set SKIP_NODE=true
+    shift
+    goto parse_args
+)
 echo Unknown option: %~1
 exit /b 1
 :done_parsing
@@ -87,18 +93,110 @@ if errorlevel 1 (
 
 where node >nul 2>&1
 if errorlevel 1 (
-    echo [WARNING] Node.js is not installed - frontend setup will be skipped
-)
-
-where npm >nul 2>&1
-if errorlevel 1 (
-    if not errorlevel 1 (
-        echo [WARNING] npm is not installed - frontend setup will be skipped
+    echo [WARNING] Node.js is not installed
+    if "%SKIP_NODE%"=="false" (
+        echo [INFO] Attempting to install Node.js using nvm-windows...
+        
+        REM Check if nvm is installed
+        where nvm >nul 2>&1
+        if errorlevel 1 (
+            echo [INFO] nvm-windows not found, installing nvm-windows...
+            if not "%CHECK%"=="true" (
+                REM Download nvm-windows installer
+                echo Downloading nvm-windows installer...
+                powershell -Command "Invoke-WebRequest -Uri 'https://github.com/coreybutler/nvm-windows/releases/download/1.1.12/nvm-setup.exe' -OutFile 'nvm-setup.exe'"
+                if errorlevel 1 (
+                    echo [ERROR] Failed to download nvm-windows installer
+                    echo [INFO] Attempting direct Node.js installation...
+                    goto :direct_node_install
+                )
+                
+                REM Install nvm-windows
+                echo Installing nvm-windows...
+                nvm-setup.exe
+                if errorlevel 1 (
+                    echo [WARNING] nvm-windows installation may have issues, trying direct Node.js installation
+                    del nvm-setup.exe 2>nul
+                    goto :direct_node_install
+                )
+                
+                REM Clean up installer
+                del nvm-setup.exe 2>nul
+                
+                REM Refresh environment variables
+                echo Refreshing environment variables...
+                call refreshenv 2>nul || set "PATH=%PATH%;%USERPROFILE%\nvm"
+                
+                REM Install Node.js using nvm
+                echo Installing Node.js using nvm...
+                nvm install 18
+                if errorlevel 1 (
+                    echo [WARNING] Failed to install Node.js using nvm, trying direct installation
+                    goto :direct_node_install
+                )
+                
+                nvm use 18
+                echo [SUCCESS] Node.js installed via nvm-windows
+            )
+        ) else (
+            echo [INFO] nvm-windows found, installing Node.js...
+            if not "%CHECK%"=="true" (
+                nvm install 18
+                if errorlevel 1 (
+                    echo [WARNING] Failed to install Node.js using nvm, trying direct installation
+                    goto :direct_node_install
+                )
+                nvm use 18
+                echo [SUCCESS] Node.js installed via nvm-windows
+            )
+        )
+        goto :node_install_complete
+        
+        :direct_node_install
+        echo [INFO] Attempting direct Node.js installation...
+        if not "%CHECK%"=="true" (
+            REM Download Node.js installer
+            echo Downloading Node.js installer...
+            powershell -Command "Invoke-WebRequest -Uri 'https://nodejs.org/dist/v18.17.0/node-v18.17.0-x64.msi' -OutFile 'node-installer.msi'"
+            if errorlevel 1 (
+                echo [ERROR] Failed to download Node.js installer
+                echo [INFO] Please install Node.js manually from https://nodejs.org/
+                cd /d "%ORIGINAL_DIR%"
+                exit /b 1
+            )
+            
+            REM Install Node.js
+            echo Installing Node.js...
+            msiexec /i node-installer.msi /quiet /norestart
+            if errorlevel 1 (
+                echo [ERROR] Failed to install Node.js
+                del node-installer.msi 2>nul
+                echo [INFO] Please install Node.js manually from https://nodejs.org/
+                cd /d "%ORIGINAL_DIR%"
+                exit /b 1
+            )
+            
+            REM Clean up installer
+            del node-installer.msi 2>nul
+            
+            REM Refresh environment variables
+            echo Refreshing environment variables...
+            call refreshenv 2>nul || set "PATH=%PATH%;C:\Program Files\nodejs"
+            
+            echo [SUCCESS] Node.js installed directly
+        )
+        
+        :node_install_complete
+        echo [INFO] Node.js installation completed
+    ) else (
+        echo [WARNING] Skipping Node.js installation (--skip-node flag)
     )
+) else (
+    echo [SUCCESS] Node.js is already installed
+    node --version
+    npm --version
 )
-
-echo [SUCCESS] Prerequisites check complete
-echo.
+echo .
 
 REM Backend Setup
 echo ========================================

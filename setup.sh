@@ -35,6 +35,7 @@ FORCE=false
 NO_COLLECTSTATIC=false
 DEV=false
 CHECK=false
+SKIP_NODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -66,8 +67,13 @@ while [[ $# -gt 0 ]]; do
             CHECK=true
             shift
             ;;
+        --skip-node)
+            SKIP_NODE=true
+            shift
+            ;;
         *)
             echo_error "Unknown option: $1"
+            cd "$ORIGINAL_DIR"
             exit 1
             ;;
     esac
@@ -106,11 +112,47 @@ if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
 fi
 
 if ! command -v node &> /dev/null; then
-    echo_warning "Node.js is not installed - frontend setup will be skipped"
-fi
-
-if ! command -v npm &> /dev/null && command -v node &> /dev/null; then
-    echo_warning "npm is not installed - frontend setup will be skipped"
+    echo_warning "Node.js is not installed"
+    if [ "$SKIP_NODE" = false ]; then
+        echo_info "Attempting to install Node.js using nvm..."
+        
+        # Check if nvm is installed
+        if command -v nvm &> /dev/null; then
+            echo_info "nvm found, installing Node.js..."
+            if [ "$CHECK" = false ]; then
+                nvm install 18
+                nvm use 18
+                echo_success "Node.js installed via nvm"
+            fi
+        else
+            echo_info "nvm not found, installing nvm..."
+            if [ "$CHECK" = false ]; then
+                # Install nvm
+                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+                if [ $? -eq 0 ]; then
+                    # Source nvm
+                    export NVM_DIR="$HOME/.nvm"
+                    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                    
+                    # Install Node.js
+                    nvm install 18
+                    nvm use 18
+                    echo_success "Node.js installed via nvm"
+                else
+                    echo_error "Failed to install nvm"
+                    echo_info "Please install Node.js manually from https://nodejs.org/"
+                    cd "$ORIGINAL_DIR"
+                    exit 1
+                fi
+            fi
+        fi
+    else
+        echo_warning "Skipping Node.js installation (--skip-node flag)"
+    fi
+else
+    echo_success "Node.js is already installed"
+    node --version
+    npm --version
 fi
 
 echo_success "Prerequisites check complete"
