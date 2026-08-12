@@ -1,0 +1,25 @@
+# Set executable permissions for Unix scripts
+setup.sh eol=lf
+start.sh eol=lf
+
+# Ensure Windows batch files use CRLF
+setup.bat eol=crlf
+start.bat eol=crlf
+
+# Text files
+*.md eol=lf
+*.txt eol=lf
+*.py eol=lf
+*.ts eol=lf
+*.tsx eol=lf
+*.json eol=lf
+*.js eol=lf
+*.jsx eol=lf
+*.css eol=lf
+*.html eol=lf
+
+# Shell scripts
+*.sh eol=lf
+
+# Batch files
+*.bat eol=crlf

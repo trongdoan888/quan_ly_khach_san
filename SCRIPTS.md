@@ -2,18 +2,16 @@
 
 ## Overview
 
-The Hotel Reservation System includes automated setup and start scripts for Windows (CMD, PowerShell) and Linux/macOS (Bash). These scripts simplify the installation and running process. The start scripts automatically clean up existing processes before starting new instances.
+The Hotel Reservation System includes automated setup and start scripts for Windows (CMD) and Linux/macOS (Bash). These scripts simplify the installation and running process. The start scripts automatically clean up existing processes before starting new instances.
 
 ## Scripts Available
 
 ### Setup Scripts
 - `setup.bat` - Windows CMD setup script
-- `setup.ps1` - Windows PowerShell setup script
 - `setup.sh` - Linux/macOS Bash setup script
 
 ### Start Scripts
 - `start.bat` - Windows CMD start script
-- `start.ps1` - Windows PowerShell start script
 - `start.sh` - Linux/macOS Bash start script
 
 ## Key Features
@@ -33,7 +31,6 @@ All scripts ensure they:
 
 ### Platform Support
 - **Windows CMD**: Native batch scripts for Windows Command Prompt
-- **Windows PowerShell**: Advanced PowerShell scripts with full features
 - **Linux/macOS Bash**: Unix shell scripts with full POSIX compliance
 
 ### Execute Permissions
@@ -44,12 +41,14 @@ chmod +x setup.sh start.sh
 
 The scripts are created with execute permissions in the repository, but users may need to set them manually depending on their system configuration.
 
-## Setup Script Parameters
+## Setup Script Parameters (Windows CMD & Unix)
+
+All scripts support the same parameters across platforms.
 Configures the system to use PostgreSQL instead of SQLite.
 
 **Usage:**
-```powershell
-.\setup.ps1 --postgres
+```cmd
+setup.bat --postgres
 ```
 
 **What it does:**
@@ -61,8 +60,8 @@ Configures the system to use PostgreSQL instead of SQLite.
 Creates a Django superuser account.
 
 **Usage:**
-```powershell
-.\setup.ps1 --create-su
+```cmd
+setup.bat --create-su
 ```
 
 **What it does:**
@@ -74,8 +73,8 @@ Creates a Django superuser account.
 Skips Python and Node.js dependency installation.
 
 **Usage:**
-```powershell
-.\setup.ps1 --skip-deps
+```cmd
+setup.bat --skip-deps
 ```
 
 **What it does:**
@@ -87,8 +86,8 @@ Skips Python and Node.js dependency installation.
 Force recreate the virtual environment.
 
 **Usage:**
-```powershell
-.\setup.ps1 --force
+```cmd
+setup.bat --force
 ```
 
 **What it does:**
@@ -100,8 +99,8 @@ Force recreate the virtual environment.
 Skips Django static files collection.
 
 **Usage:**
-```powershell
-.\setup.ps1 --no-collectstatic
+```cmd
+setup.bat --no-collectstatic
 ```
 
 **What it does:**
@@ -112,8 +111,8 @@ Skips Django static files collection.
 Install development dependencies.
 
 **Usage:**
-```powershell
-.\setup.ps1 --dev
+```cmd
+setup.bat --dev
 ```
 
 **What it does:**
@@ -124,8 +123,8 @@ Install development dependencies.
 Check if everything is installed without making changes.
 
 **Usage:**
-```powershell
-.\setup.ps1 --check
+```cmd
+setup.bat --check
 ```
 
 **What it does:**
@@ -137,15 +136,15 @@ Check if everything is installed without making changes.
 ### Combined Options
 All options can be combined:
 
-```powershell
-# Full setup with PostgreSQL and superuser
-.\setup.ps1 --postgres --create-su
+```cmd
+REM Full setup with PostgreSQL and superuser
+setup.bat --postgres --create-su
 
-# Development setup with all options
-.\setup.ps1 --postgres --create-su --dev --force
+REM Development setup with all options
+setup.bat --postgres --create-su --dev --force
 
-# Quick check
-.\setup.ps1 --check
+REM Quick check
+setup.bat --check
 ```
 
 ## Start Script Parameters
@@ -154,8 +153,8 @@ All options can be combined:
 Bind to 0.0.0.0 for external access using actual IP address.
 
 **Usage:**
-```powershell
-.\start.ps1 --remote
+```cmd
+start.bat --remote
 ```
 
 **What it does:**
@@ -180,8 +179,8 @@ Frontend UI: http://192.168.1.100:3000
 Use PostgreSQL instead of SQLite.
 
 **Usage:**
-```powershell
-.\start.ps1 --postgres
+```cmd
+start.bat --postgres
 ```
 
 **What it does:**
@@ -192,8 +191,8 @@ Use PostgreSQL instead of SQLite.
 Run services in background with nohup.
 
 **Usage:**
-```powershell
-.\start.ps1 --bck
+```cmd
+start.bat --bck
 ```
 
 **What it does:**
@@ -207,24 +206,25 @@ Run services in background with nohup.
 ### Combined Options
 All options can be combined:
 
-```powershell
-# Remote access with PostgreSQL in background
-.\start.ps1 --remote --postgres --bck
+```cmd
+REM Remote access with PostgreSQL in background
+start.bat --remote --postgres --bck
 
-# Local development with PostgreSQL
-.\start.ps1 --postgres
+REM Local development with PostgreSQL
+start.bat --postgres
 
-# Remote access in background
-.\start.ps1 --remote --bck
+REM Remote access in background
+start.bat --remote --bck
 ```
 
 ## Platform-Specific Notes
 
-### Windows (PowerShell)
-- Scripts use PowerShell syntax
+### Windows (CMD)
+- Scripts use Windows CMD batch syntax
 - Virtual environment activation: `venv\Scripts\activate`
-- Process management: `Start-Process`, `Get-Process`, `Stop-Process`
-- IP detection: Uses `Get-NetIPAddress`
+- Process management: `taskkill`, `tasklist`
+- IP detection: Uses PowerShell command from CMD
+- Directory management: Uses `cd /d` for drive changes
 
 ### Linux/macOS (Bash)
 - Scripts use Bash syntax
@@ -236,40 +236,45 @@ All options can be combined:
 ## Common Workflows
 
 ### Initial Setup
-```powershell
-# Windows
-.\setup.ps1 --postgres --create-su
+```cmd
+REM Windows
+setup.bat --postgres --create-su
+```
 
+```bash
 # Linux/macOS
-chmod +x setup.sh start.sh
 ./setup.sh --postgres --create-su
 ```
 
 ### Development
-```powershell
-# Windows
-.\start.ps1
+```cmd
+REM Windows
+start.bat
+```
 
+```bash
 # Linux/macOS
 ./start.sh
 ```
 
 ### Production with Remote Access
-```powershell
-# Windows
-.\start.ps1 --remote --postgres --bck
+```cmd
+REM Windows
+start.bat --remote --postgres --bck
+```
 
+```bash
 # Linux/macOS
 ./start.sh --remote --postgres --bck
 ```
 
 ### Troubleshooting
-```powershell
-# Check setup without changes
-.\setup.ps1 --check
+```cmd
+REM Check setup without changes
+setup.bat --check
 
-# Force recreate everything
-.\setup.ps1 --force --postgres --create-su
+REM Force recreate everything
+setup.bat --force --postgres --create-su
 ```
 
 ## File Locations
