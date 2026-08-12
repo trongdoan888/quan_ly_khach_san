@@ -31,6 +31,9 @@ echo_info() {
 REMOTE=false
 POSTGRES=false
 BCK=false
+MULTIPLE=false
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -46,8 +49,30 @@ while [[ $# -gt 0 ]]; do
             BCK=true
             shift
             ;;
+        --multiple)
+            MULTIPLE=true
+            shift
+            ;;
+        --port)
+            shift
+            if [ -z "$1" ]; then
+                echo_error "--port requires two arguments: backend_port frontend_port"
+                cd "$ORIGINAL_DIR"
+                exit 1
+            fi
+            BACKEND_PORT="$1"
+            shift
+            if [ -z "$1" ]; then
+                echo_error "--port requires two arguments: backend_port frontend_port"
+                cd "$ORIGINAL_DIR"
+                exit 1
+            fi
+            FRONTEND_PORT="$1"
+            shift
+            ;;
         *)
             echo_error "Unknown option: $1"
+            cd "$ORIGINAL_DIR"
             exit 1
             ;;
     esac
@@ -85,51 +110,64 @@ echo_info "Configuration:"
 echo "  Remote Mode: $([ "$REMOTE" = true ] && echo "Enabled (IP: $LOCAL_IP)" || echo "Disabled (localhost)")"
 echo "  Database: $([ "$POSTGRES" = true ] && echo "PostgreSQL" || echo "SQLite")"
 echo "  Background: $([ "$BCK" = true ] && echo "Enabled" || echo "Disabled")"
+echo "  Multiple Instances: $([ "$MULTIPLE" = true ] && echo "Enabled" || echo "Disabled")"
+echo "  Backend Port: $BACKEND_PORT"
+echo "  Frontend Port: $FRONTEND_PORT"
 echo ""
 
-# Kill all existing Python and Node processes
-echo_info "========================================"
-echo_info "Cleaning up existing processes"
-echo_info "========================================"
+# Kill all existing Python and Node processes (skip if --multiple is used)
+if [ "$MULTIPLE" = false ]; then
+    echo_info "========================================"
+    echo_info "Cleaning up existing processes"
+    echo_info "========================================"
 
-echo_info "Killing existing Python processes..."
-pkill -f "python.*manage.py" 2>/dev/null || true
-pkill -f "python.*runserver" 2>/dev/null || true
-if [ $? -eq 0 ]; then
-    echo_success "Python processes killed"
+    echo_info "Killing existing Python processes..."
+    pkill -f "python.*manage.py" 2>/dev/null || true
+    pkill -f "python.*runserver" 2>/dev/null || true
+    if [ $? -eq 0 ]; then
+        echo_success "Python processes killed"
+    else
+        echo_info "No existing Python processes found"
+    fi
+
+    echo_info "Killing existing Node processes..."
+    pkill -f "node.*vite" 2>/dev/null || true
+    pkill -f "node.*npm.*dev" 2>/dev/null || true
+    pkill -f "npm.*run.*dev" 2>/dev/null || true
+    if [ $? -eq 0 ]; then
+        echo_success "Node processes killed"
+    else
+        echo_info "No existing Node processes found"
+    fi
+
+    # Wait for processes to terminate
+    sleep 2
+
+    # Check and free ports
+    echo_info "Checking port availability..."
+    if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        echo_warning "Port 8000 is in use, attempting to free it..."
+        lsof -ti:8000 -sTCP:LISTEN | xargs kill -9 2>/dev/null || true
+        sleep 1
+    fi
+
+    if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+        echo_warning "Port 3000 is in use, attempting to free it..."
+        lsof -ti:3000 -sTCP:LISTEN | xargs kill -9 2>/dev/null || true
+        sleep 1
+    fi
+
+    echo_success "Ports 8000 and 3000 are available"
+    echo ""
 else
-    echo_info "No existing Python processes found"
+    echo_info "========================================"
+    echo_info "Multiple Instances Mode"
+    echo_info "========================================"
+    echo_info "Skipping process cleanup - allowing multiple instances"
+    echo_info "Backend will use port $BACKEND_PORT"
+    echo_info "Frontend will use port $FRONTEND_PORT"
+    echo ""
 fi
-
-echo_info "Killing existing Node processes..."
-pkill -f "node.*vite" 2>/dev/null || true
-pkill -f "node.*npm.*dev" 2>/dev/null || true
-pkill -f "npm.*run.*dev" 2>/dev/null || true
-if [ $? -eq 0 ]; then
-    echo_success "Node processes killed"
-else
-    echo_info "No existing Node processes found"
-fi
-
-# Wait for processes to terminate
-sleep 2
-
-# Check and free ports
-echo_info "Checking port availability..."
-if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo_warning "Port 8000 is in use, attempting to free it..."
-    lsof -ti:8000 -sTCP:LISTEN | xargs kill -9 2>/dev/null || true
-    sleep 1
-fi
-
-if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo_warning "Port 3000 is in use, attempting to free it..."
-    lsof -ti:3000 -sTCP:LISTEN | xargs kill -9 2>/dev/null || true
-    sleep 1
-fi
-
-echo_success "Ports 8000 and 3000 are available"
-echo ""
 
 # Configure database if needed
 if [ "$POSTGRES" = true ]; then
@@ -160,7 +198,6 @@ cd "$BACKEND_DIR"
 
 # Determine host and port
 BACKEND_HOST=$([ "$REMOTE" = true ] && echo "0.0.0.0" || echo "127.0.0.1")
-BACKEND_PORT=8000
 
 echo_info "Backend URL: http://$LOCAL_IP:$BACKEND_PORT/api"
 
@@ -210,7 +247,6 @@ if [ "$BCK" = false ]; then
     
     # Determine host and port
     FRONTEND_HOST=$([ "$REMOTE" = true ] && echo "0.0.0.0" || echo "localhost")
-    FRONTEND_PORT=3000
     
     echo_info "Frontend URL: http://$LOCAL_IP:$FRONTEND_PORT"
     echo ""
@@ -254,7 +290,6 @@ else
     
     # Determine host and port
     FRONTEND_HOST=$([ "$REMOTE" = true ] && echo "0.0.0.0" || echo "localhost")
-    FRONTEND_PORT=3000
     
     echo_info "Frontend URL: http://$LOCAL_IP:$FRONTEND_PORT"
     

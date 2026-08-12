@@ -8,6 +8,9 @@ REM Initialize variables
 set REMOTE=false
 set POSTGRES=false
 set BCK=false
+set MULTIPLE=false
+set BACKEND_PORT=8000
+set FRONTEND_PORT=3000
 
 REM Parse arguments
 :parse_args
@@ -24,6 +27,27 @@ if /i "%~1"=="--postgres" (
 )
 if /i "%~1"=="--bck" (
     set BCK=true
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--multiple" (
+    set MULTIPLE=true
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--port" (
+    shift
+    if "%~1"=="" (
+        echo [ERROR] --port requires two arguments: backend_port frontend_port
+        exit /b 1
+    )
+    set BACKEND_PORT=%~1
+    shift
+    if "%~1"=="" (
+        echo [ERROR] --port requires two arguments: backend_port frontend_port
+        exit /b 1
+    )
+    set FRONTEND_PORT=%~1
     shift
     goto parse_args
 )
@@ -58,6 +82,9 @@ echo Configuration:
 echo   Remote Mode: %REMOTE% (IP: %LOCAL_IP%)
 echo   Database: %POSTGRES%
 echo   Background: %BCK%
+echo   Multiple Instances: %MULTIPLE%
+echo   Backend Port: %BACKEND_PORT%
+echo   Frontend Port: %FRONTEND_PORT%
 echo.
 
 REM Configure database if needed
@@ -70,58 +97,68 @@ if "%POSTGRES%"=="true" (
     echo [SUCCESS] PostgreSQL configured
 )
 
-REM Kill existing processes
-echo ========================================
-echo Cleaning up existing processes
-echo ========================================
+REM Kill existing processes (skip if --multiple is used)
+if "%MULTIPLE%"=="false" (
+    echo ========================================
+    echo Cleaning up existing processes
+    echo ========================================
 
-REM Kill existing Python processes
-echo Checking for existing Python processes...
-tasklist /FI "IMAGENAME eq python.exe" 2>nul | find /I "python.exe" >nul
-if not errorlevel 1 (
-    echo [INFO] Killing existing Python processes...
-    taskkill /F /IM python.exe >nul 2>&1
-    timeout /t 2 /nobreak >nul
-    echo [SUCCESS] Python processes killed
-) else (
-    echo [INFO] No existing Python processes found
-)
-
-REM Kill existing Node processes
-echo Checking for existing Node processes...
-tasklist /FI "IMAGENAME eq node.exe" 2>nul | find /I "node.exe" >nul
-if not errorlevel 1 (
-    echo [INFO] Killing existing Node processes...
-    taskkill /F /IM node.exe >nul 2>&1
-    timeout /t 2 /nobreak >nul
-    echo [SUCCESS] Node processes killed
-) else (
-    echo [INFO] No existing Node processes found
-)
-
-REM Check if ports are available
-echo.
-echo Checking port availability...
-netstat -ano | findstr ":8000" >nul
-if not errorlevel 1 (
-    echo [WARNING] Port 8000 is in use, attempting to free it...
-    for /f "tokens=5" %%A in ('netstat -ano ^| findstr ":8000"') do (
-        taskkill /F /PID %%A >nul 2>&1
+    REM Kill existing Python processes
+    echo Checking for existing Python processes...
+    tasklist /FI "IMAGENAME eq python.exe" 2>nul | find /I "python.exe" >nul
+    if not errorlevel 1 (
+        echo [INFO] Killing existing Python processes...
+        taskkill /F /IM python.exe >nul 2>&1
+        timeout /t 2 /nobreak >nul
+        echo [SUCCESS] Python processes killed
+    ) else (
+        echo [INFO] No existing Python processes found
     )
-    timeout /t 2 /nobreak >nul
-)
 
-netstat -ano | findstr ":3000" >nul
-if not errorlevel 1 (
-    echo [WARNING] Port 3000 is in use, attempting to free it...
-    for /f "tokens=5" %%A in ('netstat -ano ^| findstr ":3000"') do (
-        taskkill /F /PID %%A >nul 2>&1
+    REM Kill existing Node processes
+    echo Checking for existing Node processes...
+    tasklist /FI "IMAGENAME eq node.exe" 2>nul | find /I "node.exe" >nul
+    if not errorlevel 1 (
+        echo [INFO] Killing existing Node processes...
+        taskkill /F /IM node.exe >nul 2>&1
+        timeout /t 2 /nobreak >nul
+        echo [SUCCESS] Node processes killed
+    ) else (
+        echo [INFO] No existing Node processes found
     )
-    timeout /t 2 /nobreak >nul
-)
 
-echo [SUCCESS] Ports 8000 and 3000 are available
-echo.
+    REM Check if ports are available
+    echo.
+    echo Checking port availability...
+    netstat -ano | findstr ":8000" >nul
+    if not errorlevel 1 (
+        echo [WARNING] Port 8000 is in use, attempting to free it...
+        for /f "tokens=5" %%A in ('netstat -ano ^| findstr ":8000"') do (
+            taskkill /F /PID %%A >nul 2>&1
+        )
+        timeout /t 2 /nobreak >nul
+    )
+
+    netstat -ano | findstr ":3000" >nul
+    if not errorlevel 1 (
+        echo [WARNING] Port 3000 is in use, attempting to free it...
+        for /f "tokens=5" %%A in ('netstat -ano ^| findstr ":3000"') do (
+            taskkill /F /PID %%A >nul 2>&1
+        )
+        timeout /t 2 /nobreak >nul
+    )
+
+    echo [SUCCESS] Ports 8000 and 3000 are available
+    echo.
+) else (
+    echo ========================================
+    echo Multiple Instances Mode
+    echo ========================================
+    echo [INFO] Skipping process cleanup - allowing multiple instances
+    echo [INFO] Backend will use port %BACKEND_PORT%
+    echo [INFO] Frontend will use port %FRONTEND_PORT%
+    echo.
+)
 
 REM Start Backend
 echo ========================================
@@ -138,7 +175,6 @@ cd /d "%BACKEND_DIR%"
 REM Determine host and port
 set BACKEND_HOST=127.0.0.1
 if "%REMOTE%"=="true" set BACKEND_HOST=0.0.0.0
-set BACKEND_PORT=8000
 
 echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
 
@@ -197,7 +233,6 @@ if "%BCK%"=="false" (
     REM Determine host and port
     set FRONTEND_HOST=localhost
     if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
-    set FRONTEND_PORT=3000
     
     echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
     echo.
@@ -241,7 +276,6 @@ if "%BCK%"=="false" (
     REM Determine host and port
     set FRONTEND_HOST=localhost
     if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
-    set FRONTEND_PORT=3000
     
     echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
     

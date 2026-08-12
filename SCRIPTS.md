@@ -149,6 +149,43 @@ setup.bat --check
 
 ## Start Script Parameters
 
+### --multiple
+Allow multiple instances of the application to run simultaneously without killing existing processes.
+
+**Usage:**
+```cmd
+start.bat --multiple
+```
+
+**What it does:**
+- Skips process cleanup (Python and Node processes)
+- Allows multiple instances to run on different ports
+- Must be used with --port to specify custom ports
+- Useful for development with multiple projects
+
+### --port
+Specify custom ports for backend and frontend (in this order: backend_port frontend_port).
+
+**Usage:**
+```cmd
+start.bat --port 8001 3001
+```
+
+**What it does:**
+- Sets backend port to first argument (8001)
+- Sets frontend port to second argument (3001)
+- Must be used with --multiple to avoid port conflicts
+- Allows running multiple instances on different ports
+
+**Examples:**
+```cmd
+# Run on custom ports with multiple instances
+start.bat --multiple --port 8001 3001
+
+# Run on custom ports with remote access
+start.bat --remote --port 8002 3002
+```
+
 ### --remote
 Bind to 0.0.0.0 for external access using actual IP address.
 
@@ -215,6 +252,12 @@ start.bat --postgres
 
 REM Remote access in background
 start.bat --remote --bck
+
+REM Multiple instances with custom ports
+start.bat --multiple --port 8001 3001
+
+REM Remote access with custom ports
+start.bat --remote --port 8002 3002
 ```
 
 ## Platform-Specific Notes

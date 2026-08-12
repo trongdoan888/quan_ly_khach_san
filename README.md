@@ -91,6 +91,12 @@ start.bat
 
 # Start (automatically kills existing processes)
 ./start.sh
+
+# Multiple instances with custom ports
+./start.sh --multiple --port 8001 3001
+
+# Remote access with custom ports
+./start.sh --remote --port 8002 3002
 ```
 
 ### Setup Script Options
@@ -124,17 +130,25 @@ start.bat
 | `--remote` | Bind to 0.0.0.0 for external access (uses actual IP) |
 | `--postgres` | Use PostgreSQL instead of SQLite |
 | `--bck` | Run in background with nohup |
+| `--multiple` | Allow multiple instances without killing existing processes |
+| `--port` | Specify custom ports (backend_port frontend_port) |
 
 **Examples:**
-```powershell
+```cmd
 # Local development
-.\start.ps1
+start.bat
 
 # Remote access with PostgreSQL
-.\start.ps1 --remote --postgres
+start.bat --remote --postgres
 
 # Background mode for production
-.\start.ps1 --remote --postgres --bck
+start.bat --remote --postgres --bck
+
+# Multiple instances with custom ports
+start.bat --multiple --port 8001 3001
+
+# Remote access with custom ports
+start.bat --remote --port 8002 3002
 ```
 
 ### Remote Access
