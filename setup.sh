@@ -73,8 +73,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Get script directory
+# Get script directory and save original directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ORIGINAL_DIR="$(pwd)"
 BACKEND_DIR="$SCRIPT_DIR/backend"
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
 
@@ -94,11 +95,13 @@ echo_info "Checking prerequisites..."
 
 if ! command -v python3 &> /dev/null; then
     echo_error "Python 3 is not installed or not in PATH"
+    cd "$ORIGINAL_DIR"
     exit 1
 fi
 
 if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
     echo_error "pip is not installed or not in PATH"
+    cd "$ORIGINAL_DIR"
     exit 1
 fi
 
@@ -120,6 +123,7 @@ echo_info "========================================"
 
 if [ ! -d "$BACKEND_DIR" ]; then
     echo_error "Backend directory not found: $BACKEND_DIR"
+    cd "$ORIGINAL_DIR"
     exit 1
 fi
 
@@ -141,6 +145,7 @@ if [ ! -d "$VENV_DIR" ]; then
         python3 -m venv venv
         if [ $? -ne 0 ]; then
             echo_error "Failed to create virtual environment"
+            cd "$ORIGINAL_DIR"
             exit 1
         fi
     fi
@@ -163,6 +168,7 @@ if [ "$SKIP_DEPS" = false ]; then
         pip install -r requirements.txt
         if [ $? -ne 0 ]; then
             echo_error "Failed to install Python dependencies"
+            cd "$ORIGINAL_DIR"
             exit 1
         fi
     fi
@@ -198,6 +204,7 @@ if [ "$CHECK" = false ]; then
     python manage.py migrate
     if [ $? -ne 0 ]; then
         echo_error "Failed to run migrations"
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
 fi
@@ -248,6 +255,7 @@ echo_info "========================================"
 if command -v node &> /dev/null && command -v npm &> /dev/null; then
     if [ ! -d "$FRONTEND_DIR" ]; then
         echo_error "Frontend directory not found: $FRONTEND_DIR"
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
 
@@ -260,6 +268,7 @@ if command -v node &> /dev/null && command -v npm &> /dev/null; then
             npm install
             if [ $? -ne 0 ]; then
                 echo_error "Failed to install Node.js dependencies"
+                cd "$ORIGINAL_DIR"
                 exit 1
             fi
         fi
@@ -307,3 +316,6 @@ echo_info "Demo credentials:"
 echo "  Admin: admin / admin123"
 echo "  Staff: staff / staff123"
 echo ""
+
+# Return to original directory
+cd "$ORIGINAL_DIR"

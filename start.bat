@@ -1,0 +1,303 @@
+@echo off
+REM Hotel Reservation System - Start Script (Windows CMD)
+REM Usage: start.bat [options]
+
+setlocal enabledelayedexpansion
+
+REM Initialize variables
+set REMOTE=false
+set POSTGRES=false
+set BCK=false
+
+REM Parse arguments
+:parse_args
+if "%~1"=="" goto done_parsing
+if /i "%~1"=="--remote" (
+    set REMOTE=true
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--postgres" (
+    set POSTGRES=true
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--bck" (
+    set BCK=true
+    shift
+    goto parse_args
+)
+echo Unknown option: %~1
+exit /b 1
+:done_parsing
+
+REM Get script directory and save original directory
+set SCRIPT_DIR=%~dp0
+set ORIGINAL_DIR=%CD%
+set BACKEND_DIR=%SCRIPT_DIR%backend
+set FRONTEND_DIR=%SCRIPT_DIR%frontend
+set VENV_PYTHON=%BACKEND_DIR%\venv\Scripts\python.exe
+
+REM Get local IP address if remote mode
+set LOCAL_IP=localhost
+if "%REMOTE%"=="true" (
+    REM Try to get local IP using PowerShell
+    for /f "tokens=2 delims=:" %%A in ('powershell -Command "Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias Wi*,Eth* | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*' } | Select-Object -First 1 -ExpandProperty IPAddress" 2^>nul') do (
+        set LOCAL_IP=%%A
+    )
+    if "!LOCAL_IP!"=="localhost" (
+        set LOCAL_IP=0.0.0.0
+    )
+)
+
+echo ========================================
+echo Hotel Reservation System - Start
+echo ========================================
+echo.
+echo Configuration:
+echo   Remote Mode: %REMOTE% (IP: %LOCAL_IP%)
+echo   Database: %POSTGRES%
+echo   Background: %BCK%
+echo.
+
+REM Configure database if needed
+if "%POSTGRES%"=="true" (
+    echo Configuring for PostgreSQL...
+    set ENV_FILE=%BACKEND_DIR%.env
+    if exist "%ENV_FILE%" (
+        powershell -Command "(Get-Content '%ENV_FILE%') -replace 'DB_NAME=.*', 'DB_NAME=hotel_reservation' -replace 'DB_USER=.*', 'DB_USER=postgres' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=postgres' -replace 'DB_HOST=.*', 'DB_HOST=localhost' -replace 'DB_PORT=.*', 'DB_PORT=5432' | Set-Content '%ENV_FILE%'"
+    )
+    echo [SUCCESS] PostgreSQL configured
+)
+
+REM Kill existing processes
+echo ========================================
+echo Cleaning up existing processes
+echo ========================================
+
+REM Kill existing Python processes
+echo Checking for existing Python processes...
+tasklist /FI "IMAGENAME eq python.exe" 2>nul | find /I "python.exe" >nul
+if not errorlevel 1 (
+    echo [INFO] Killing existing Python processes...
+    taskkill /F /IM python.exe >nul 2>&1
+    timeout /t 2 /nobreak >nul
+    echo [SUCCESS] Python processes killed
+) else (
+    echo [INFO] No existing Python processes found
+)
+
+REM Kill existing Node processes
+echo Checking for existing Node processes...
+tasklist /FI "IMAGENAME eq node.exe" 2>nul | find /I "node.exe" >nul
+if not errorlevel 1 (
+    echo [INFO] Killing existing Node processes...
+    taskkill /F /IM node.exe >nul 2>&1
+    timeout /t 2 /nobreak >nul
+    echo [SUCCESS] Node processes killed
+) else (
+    echo [INFO] No existing Node processes found
+)
+
+REM Check if ports are available
+echo.
+echo Checking port availability...
+netstat -ano | findstr ":8000" >nul
+if not errorlevel 1 (
+    echo [WARNING] Port 8000 is in use, attempting to free it...
+    for /f "tokens=5" %%A in ('netstat -ano ^| findstr ":8000"') do (
+        taskkill /F /PID %%A >nul 2>&1
+    )
+    timeout /t 2 /nobreak >nul
+)
+
+netstat -ano | findstr ":3000" >nul
+if not errorlevel 1 (
+    echo [WARNING] Port 3000 is in use, attempting to free it...
+    for /f "tokens=5" %%A in ('netstat -ano ^| findstr ":3000"') do (
+        taskkill /F /PID %%A >nul 2>&1
+    )
+    timeout /t 2 /nobreak >nul
+)
+
+echo [SUCCESS] Ports 8000 and 3000 are available
+echo.
+
+REM Start Backend
+echo ========================================
+echo Starting Backend
+echo ========================================
+
+if not exist "%VENV_PYTHON%" (
+    echo [ERROR] Virtual environment not found. Run setup.bat first.
+    exit /b 1
+)
+
+cd /d "%BACKEND_DIR%"
+
+REM Determine host and port
+set BACKEND_HOST=127.0.0.1
+if "%REMOTE%"=="true" set BACKEND_HOST=0.0.0.0
+set BACKEND_PORT=8000
+
+echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
+
+if "%BCK%"=="true" (
+    echo Starting backend in background...
+    set BACKEND_LOG=%BACKEND_DIR%backend.log
+    set BACKEND_PID_FILE=%BACKEND_DIR%backend.pid
+    
+    REM Start in background using start /B
+    start /B "" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT% > "%BACKEND_LOG%" 2>&1
+    
+    REM Get the PID of the last started process
+    timeout /t 2 /nobreak >nul
+    for /f "tokens=2" %%A in ('tasklist /FI "IMAGENAME eq python.exe" ^| findstr "manage.py"') do (
+        set BACKEND_PID=%%A
+    )
+    
+    if defined BACKEND_PID (
+        echo %BACKEND_PID% > "%BACKEND_PID_FILE%"
+        echo [SUCCESS] Backend started in background (PID: %BACKEND_PID%)
+        echo [INFO] Logs: %BACKEND_LOG%
+    ) else (
+        echo [WARNING] Could not determine backend PID
+    )
+) else (
+    echo Starting backend in foreground...
+    echo [WARNING] Press Ctrl+C to stop the server
+    echo.
+    
+    "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
+    
+    echo.
+    echo [WARNING] Backend stopped
+)
+
+REM Start Frontend (only if not in background mode or if background mode with separate handling)
+if "%BCK%"=="false" (
+    echo.
+    echo ========================================
+    echo Starting Frontend
+    echo ========================================
+    
+    if not exist "%FRONTEND_DIR%" (
+        echo [ERROR] Frontend directory not found
+        exit /b 1
+    )
+    
+    cd /d "%FRONTEND_DIR%"
+    
+    REM Check if node_modules exists
+    if not exist "node_modules" (
+        echo [WARNING] node_modules not found. Running npm install...
+        npm install
+    )
+    
+    REM Determine host and port
+    set FRONTEND_HOST=localhost
+    if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
+    set FRONTEND_PORT=3000
+    
+    echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
+    echo.
+    
+    REM Update vite config for remote access
+    if "%REMOTE%"=="true" (
+        echo Configuring Vite for remote access...
+        set VITE_CONFIG=%FRONTEND_DIR%\vite.config.ts
+        if exist "%VITE_CONFIG%" (
+            powershell -Command "(Get-Content '%VITE_CONFIG%') -replace \"host: 'localhost'\", \"host: '0.0.0.0'\" | Set-Content '%VITE_CONFIG%'"
+        )
+    )
+    
+    echo Starting frontend...
+    echo [WARNING] Press Ctrl+C to stop the server
+    echo.
+    
+    npm run dev
+    
+    echo.
+    echo [WARNING] Frontend stopped
+) else (
+    echo.
+    echo ========================================
+    echo Starting Frontend (Background)
+    echo ========================================
+    
+    if not exist "%FRONTEND_DIR%" (
+        echo [ERROR] Frontend directory not found
+        exit /b 1
+    )
+    
+    cd /d "%FRONTEND_DIR%"
+    
+    REM Check if node_modules exists
+    if not exist "node_modules" (
+        echo [WARNING] node_modules not found. Running npm install...
+        npm install
+    )
+    
+    REM Determine host and port
+    set FRONTEND_HOST=localhost
+    if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
+    set FRONTEND_PORT=3000
+    
+    echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
+    
+    REM Update vite config for remote access
+    if "%REMOTE%"=="true" (
+        echo Configuring Vite for remote access...
+        set VITE_CONFIG=%FRONTEND_DIR%\vite.config.ts
+        if exist "%VITE_CONFIG%" (
+            powershell -Command "(Get-Content '%VITE_CONFIG%') -replace \"host: 'localhost'\", \"host: '0.0.0.0'\" | Set-Content '%VITE_CONFIG%'"
+        )
+    )
+    
+    echo Starting frontend in background...
+    set FRONTEND_LOG=%FRONTEND_DIR%frontend.log
+    set FRONTEND_PID_FILE=%FRONTEND_DIR%frontend.pid
+    
+    REM Start in background using start /B
+    start /B "" npm run dev > "%FRONTEND_LOG%" 2>&1
+    
+    REM Get the PID of the last started process
+    timeout /t 2 /nobreak >nul
+    for /f "tokens=2" %%A in ('tasklist /FI "IMAGENAME eq node.exe" ^| findstr "npm"') do (
+        set FRONTEND_PID=%%A
+    )
+    
+    if defined FRONTEND_PID (
+        echo %FRONTEND_PID% > "%FRONTEND_PID_FILE%"
+        echo [SUCCESS] Frontend started in background (PID: %FRONTEND_PID%)
+        echo [INFO] Logs: %FRONTEND_LOG%
+    ) else (
+        echo [WARNING] Could not determine frontend PID
+    )
+)
+
+REM Final summary
+echo.
+echo ========================================
+echo Services Started
+echo ========================================
+echo.
+echo [SUCCESS] Backend API: http://%LOCAL_IP%:%BACKEND_PORT%/api
+echo [SUCCESS] Frontend UI: http://%LOCAL_IP%:%FRONTEND_PORT%
+echo.
+echo Demo credentials:
+echo   Admin: admin / admin123
+echo   Staff: staff / staff123
+echo.
+
+if "%BCK%"=="true" (
+    echo To stop services:
+    echo   Run: stop.bat
+    echo   Or manually kill processes using the PIDs
+    echo.
+)
+
+REM Return to original directory
+cd /d "%ORIGINAL_DIR%"
+
+endlocal

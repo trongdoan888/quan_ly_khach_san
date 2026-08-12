@@ -27,8 +27,9 @@ echo_info() {
     echo -e "${CYAN}$1${NC}"
 }
 
-# Get script directory
+# Get script directory and save original directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ORIGINAL_DIR="$(pwd)"
 BACKEND_DIR="$SCRIPT_DIR/backend"
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
 
@@ -52,14 +53,22 @@ if [ -f "$BACKEND_PID_FILE" ]; then
     rm -f "$BACKEND_PID_FILE"
 else
     # Try to find and kill Django processes
-    DJANGO_PIDS=$(pgrep -f "manage.py runserver" 2>/dev/null)
+    DJANGO_PIDS=$(pgrep -f "python.*manage.py" 2>/dev/null)
     if [ -n "$DJANGO_PIDS" ]; then
         echo "$DJANGO_PIDS" | while read pid; do
             kill "$pid" 2>/dev/null
             echo_success "Backend stopped (PID: $pid)"
         done
     else
-        echo_warning "No running backend process found"
+        DJANGO_PIDS=$(pgrep -f "python.*runserver" 2>/dev/null)
+        if [ -n "$DJANGO_PIDS" ]; then
+            echo "$DJANGO_PIDS" | while read pid; do
+                kill "$pid" 2>/dev/null
+                echo_success "Backend stopped (PID: $pid)"
+            done
+        else
+            echo_warning "No running backend process found"
+        fi
     fi
 fi
 
@@ -79,7 +88,7 @@ if [ -f "$FRONTEND_PID_FILE" ]; then
     rm -f "$FRONTEND_PID_FILE"
 else
     # Try to find and kill Node/Vite processes
-    NODE_PIDS=$(pgrep -f "vite" 2>/dev/null)
+    NODE_PIDS=$(pgrep -f "node.*vite" 2>/dev/null)
     if [ -n "$NODE_PIDS" ]; then
         echo "$NODE_PIDS" | while read pid; do
             kill "$pid" 2>/dev/null
@@ -87,7 +96,7 @@ else
         done
     else
         # Try npm run dev processes
-        NPM_PIDS=$(pgrep -f "npm run dev" 2>/dev/null)
+        NPM_PIDS=$(pgrep -f "npm.*run.*dev" 2>/dev/null)
         if [ -n "$NPM_PIDS" ]; then
             echo "$NPM_PIDS" | while read pid; do
                 kill "$pid" 2>/dev/null
@@ -102,3 +111,6 @@ fi
 echo ""
 echo_success "All services stopped"
 echo ""
+
+# Return to original directory
+cd "$ORIGINAL_DIR"

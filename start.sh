@@ -53,8 +53,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Get script directory and save original directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd"
+ORIGINAL_DIR="$(pwd)"
 BACKEND_DIR="$SCRIPT_DIR/backend"
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
 VENV_PYTHON="$BACKEND_DIR/venv/bin/python"
@@ -86,6 +87,50 @@ echo "  Database: $([ "$POSTGRES" = true ] && echo "PostgreSQL" || echo "SQLite"
 echo "  Background: $([ "$BCK" = true ] && echo "Enabled" || echo "Disabled")"
 echo ""
 
+# Kill all existing Python and Node processes
+echo_info "========================================"
+echo_info "Cleaning up existing processes"
+echo_info "========================================"
+
+echo_info "Killing existing Python processes..."
+pkill -f "python.*manage.py" 2>/dev/null || true
+pkill -f "python.*runserver" 2>/dev/null || true
+if [ $? -eq 0 ]; then
+    echo_success "Python processes killed"
+else
+    echo_info "No existing Python processes found"
+fi
+
+echo_info "Killing existing Node processes..."
+pkill -f "node.*vite" 2>/dev/null || true
+pkill -f "node.*npm.*dev" 2>/dev/null || true
+pkill -f "npm.*run.*dev" 2>/dev/null || true
+if [ $? -eq 0 ]; then
+    echo_success "Node processes killed"
+else
+    echo_info "No existing Node processes found"
+fi
+
+# Wait for processes to terminate
+sleep 2
+
+# Check and free ports
+echo_info "Checking port availability..."
+if lsof -Pi :8000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo_warning "Port 8000 is in use, attempting to free it..."
+    lsof -ti:8000 -sTCP:LISTEN | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
+if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo_warning "Port 3000 is in use, attempting to free it..."
+    lsof -ti:3000 -sTCP:LISTEN | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
+echo_success "Ports 8000 and 3000 are available"
+echo ""
+
 # Configure database if needed
 if [ "$POSTGRES" = true ]; then
     echo_info "Configuring for PostgreSQL..."
@@ -107,6 +152,7 @@ echo_info "========================================"
 
 if [ ! -f "$VENV_PYTHON" ]; then
     echo_error "Virtual environment not found. Run setup.sh first."
+    cd "$ORIGINAL_DIR"
     exit 1
 fi
 
@@ -123,9 +169,6 @@ if [ "$BCK" = true ]; then
     BACKEND_LOG="$BACKEND_DIR/backend.log"
     BACKEND_PID_FILE="$BACKEND_DIR/backend.pid"
     
-    # Kill existing processes
-    pkill -f "manage.py runserver" 2>/dev/null || true
-    
     # Start in background using nohup
     nohup "$VENV_PYTHON" manage.py runserver "$BACKEND_HOST:$BACKEND_PORT" > "$BACKEND_LOG" 2>&1 &
     BACKEND_PID=$!
@@ -139,6 +182,9 @@ else
     echo ""
     
     "$VENV_PYTHON" manage.py runserver "$BACKEND_HOST:$BACKEND_PORT"
+    
+    # Return to original directory after stopping
+    cd "$ORIGINAL_DIR"
 fi
 
 # Start Frontend (only if not in background mode or if background mode with separate handling)
@@ -150,6 +196,7 @@ if [ "$BCK" = false ]; then
     
     if [ ! -d "$FRONTEND_DIR" ]; then
         echo_error "Frontend directory not found"
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
     
@@ -182,6 +229,9 @@ if [ "$BCK" = false ]; then
     echo ""
     
     npm run dev
+    
+    # Return to original directory after stopping
+    cd "$ORIGINAL_DIR"
 else
     echo ""
     echo_info "========================================"
@@ -190,6 +240,7 @@ else
     
     if [ ! -d "$FRONTEND_DIR" ]; then
         echo_error "Frontend directory not found"
+        cd "$ORIGINAL_DIR"
         exit 1
     fi
     
@@ -220,10 +271,6 @@ else
     FRONTEND_LOG="$FRONTEND_DIR/frontend.log"
     FRONTEND_PID_FILE="$FRONTEND_DIR/frontend.pid"
     
-    # Kill existing processes
-    pkill -f "vite" 2>/dev/null || true
-    pkill -f "npm run dev" 2>/dev/null || true
-    
     # Start in background using nohup
     nohup npm run dev > "$FRONTEND_LOG" 2>&1 &
     FRONTEND_PID=$!
@@ -231,6 +278,9 @@ else
     
     echo_success "Frontend started in background (PID: $FRONTEND_PID)"
     echo_info "Logs: $FRONTEND_LOG"
+    
+    # Return to original directory
+    cd "$ORIGINAL_DIR"
 fi
 
 # Final summary
@@ -253,3 +303,6 @@ if [ "$BCK" = true ]; then
     echo "  Or manually kill processes using the PIDs"
     echo ""
 fi
+
+# Ensure we return to original directory
+cd "$ORIGINAL_DIR"

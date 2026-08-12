@@ -71,9 +71,21 @@ Reservations
 
 ## 📜 Setup & Start Scripts
 
-The project includes automated setup and start scripts for both Windows (PowerShell) and Linux/macOS (Bash).
+The project includes automated setup and start scripts for Windows (CMD, PowerShell) and Linux/macOS (Bash).
 
 ### Quick Start
+
+**Windows (CMD):**
+```cmd
+REM Setup
+setup.bat
+
+REM Start
+start.bat
+
+REM Stop
+stop.bat
+```
 
 **Windows (PowerShell):**
 ```powershell

@@ -2,25 +2,54 @@
 
 ## Overview
 
-The Hotel Reservation System includes automated setup and start scripts for both Windows (PowerShell) and Linux/macOS (Bash). These scripts simplify the installation and running process.
+The Hotel Reservation System includes automated setup and start scripts for Windows (CMD, PowerShell) and Linux/macOS (Bash). These scripts simplify the installation and running process.
 
 ## Scripts Available
 
 ### Setup Scripts
+- `setup.bat` - Windows CMD setup script
 - `setup.ps1` - Windows PowerShell setup script
 - `setup.sh` - Linux/macOS Bash setup script
 
 ### Start Scripts
+- `start.bat` - Windows CMD start script
 - `start.ps1` - Windows PowerShell start script
 - `start.sh` - Linux/macOS Bash start script
 
 ### Stop Scripts
+- `stop.bat` - Windows CMD stop script
 - `stop.ps1` - Windows PowerShell stop script
 - `stop.sh` - Linux/macOS Bash stop script
 
-## Setup Script Parameters
+## Key Features
 
-### --postgres
+### Process Cleanup
+All start scripts automatically:
+- Kill existing Python processes before starting backend
+- Kill existing Node processes before starting frontend
+- Free ports 8000 and 3000 if they're in use
+- Ensure clean startup without port conflicts
+
+### Directory Management
+All scripts ensure they:
+- Return to the original directory after execution
+- Maintain the user's working directory context
+- Handle directory changes safely
+
+### Platform Support
+- **Windows CMD**: Native batch scripts for Windows Command Prompt
+- **Windows PowerShell**: Advanced PowerShell scripts with full features
+- **Linux/macOS Bash**: Unix shell scripts with full POSIX compliance
+
+### Execute Permissions
+For Linux/macOS users, scripts must be made executable:
+```bash
+chmod +x setup.sh start.sh stop.sh
+```
+
+The scripts are created with execute permissions in the repository, but users may need to set them manually depending on their system configuration.
+
+## Setup Script Parameters
 Configures the system to use PostgreSQL instead of SQLite.
 
 **Usage:**
