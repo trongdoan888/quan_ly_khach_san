@@ -97,6 +97,16 @@ if "%POSTGRES%"=="true" (
     echo [SUCCESS] PostgreSQL configured
 )
 
+REM Configure frontend API URL if custom ports are used
+if not "%BACKEND_PORT%"=="8000" (
+    echo Configuring frontend API URL for custom port...
+    set FRONTEND_ENV=%FRONTEND_DIR%.env
+    if exist "%FRONTEND_ENV%" (
+        echo VITE_API_URL=http://localhost:%BACKEND_PORT%/api > "%FRONTEND_ENV%"
+    )
+    echo [SUCCESS] Frontend API URL configured
+)
+
 REM Kill existing processes (skip if --multiple is used)
 if "%MULTIPLE%"=="false" (
     echo ========================================

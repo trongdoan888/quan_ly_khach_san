@@ -183,6 +183,18 @@ if [ "$POSTGRES" = true ]; then
     echo_success "PostgreSQL configured"
 fi
 
+# Configure frontend API URL if custom ports are used
+if [ "$BACKEND_PORT" != "8000" ]; then
+    echo_info "Configuring frontend API URL for custom port..."
+    FRONTEND_ENV="$FRONTEND_DIR/.env"
+    if [ -f "$FRONTEND_ENV" ]; then
+        # Remove the old line and add the new one
+        sed -i.bak '/VITE_API_URL=/d' "$FRONTEND_ENV"
+        echo "VITE_API_URL=http://localhost:$BACKEND_PORT/api" >> "$FRONTEND_ENV"
+    fi
+    echo_success "Frontend API URL configured"
+fi
+
 # Start Backend
 echo_info "========================================"
 echo_info "Starting Backend"

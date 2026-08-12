@@ -174,6 +174,7 @@ start.bat --port 8001 3001
 **What it does:**
 - Sets backend port to first argument (8001)
 - Sets frontend port to second argument (3001)
+- Automatically configures frontend API URL to use custom backend port
 - Must be used with --multiple to avoid port conflicts
 - Allows running multiple instances on different ports
 
