@@ -110,7 +110,7 @@ if not exist "%BACKEND_DIR%" (
     exit /b 1
 )
 
-pushd "%BACKEND_DIR%"
+cd /d "%BACKEND_DIR%"
 
 REM Check/create virtual environment
 set VENV_DIR=%BACKEND_DIR%venv
@@ -128,14 +128,34 @@ if "%FORCE%"=="true" (
 if not exist "%VENV_DIR%" (
     echo Creating virtual environment...
     if not "%CHECK%"=="true" (
+        REM Try to create venv
         python -m venv venv
         if errorlevel 1 (
             echo [ERROR] Failed to create virtual environment
-            popd
-            exit /b 1
+            echo [INFO] Trying alternative method...
+            REM Clean up failed attempt
+            if exist "%VENV_DIR%" rmdir /s /q "%VENV_DIR%"
+            REM Try with --clear flag
+            python -m venv --clear venv
+            if errorlevel 1 (
+                echo [ERROR] Virtual environment creation failed completely
+                cd /d "%ORIGINAL_DIR%"
+                exit /b 1
+            )
+        )
+        REM Verify venv was created successfully
+        if not exist "%VENV_PYTHON%" (
+            echo [ERROR] Virtual environment creation failed - python.exe not found
+            echo [INFO] Cleaning up failed venv and using system Python instead
+            if exist "%VENV_DIR%" rmdir /s /q "%VENV_DIR%"
+            set VENV_PYTHON=python
         )
     )
-    echo [SUCCESS] Virtual environment created
+    if exist "%VENV_PYTHON%" (
+        echo [SUCCESS] Virtual environment created
+    ) else (
+        echo [WARNING] Using system Python instead of virtual environment
+    )
 ) else (
     echo [SUCCESS] Virtual environment already exists
 )
@@ -143,18 +163,41 @@ if not exist "%VENV_DIR%" (
 REM Activate virtual environment and upgrade pip
 echo Activating virtual environment...
 if not "%CHECK%"=="true" (
-    "%VENV_PYTHON%" -m pip install --upgrade pip
+    if exist "%VENV_PYTHON%" (
+        "%VENV_PYTHON%" -m pip install --upgrade pip
+        if errorlevel 1 (
+            echo [WARNING] Failed to upgrade pip in virtual environment, trying system pip
+            python -m pip install --upgrade pip
+        )
+    ) else (
+        echo [WARNING] Virtual environment python not found, using system Python
+        python -m pip install --upgrade pip
+    )
 )
 
 REM Install dependencies
 if "%SKIP_DEPS%"=="false" (
     echo Installing Python dependencies...
     if not "%CHECK%"=="true" (
-        "%VENV_PYTHON%" -m pip install -r requirements.txt
-        if errorlevel 1 (
-            echo [ERROR] Failed to install Python dependencies
-            popd
-            exit /b 1
+        if exist "%VENV_PYTHON%" (
+            "%VENV_PYTHON%" -m pip install -r requirements.txt
+            if errorlevel 1 (
+                echo [WARNING] Failed to install dependencies in virtual environment, trying system pip
+                python -m pip install -r requirements.txt
+                if errorlevel 1 (
+                    echo [ERROR] Failed to install Python dependencies
+                    cd /d "%ORIGINAL_DIR%"
+                    exit /b 1
+                )
+            )
+        ) else (
+            echo [WARNING] Virtual environment not found, using system Python
+            python -m pip install -r requirements.txt
+            if errorlevel 1 (
+                echo [ERROR] Failed to install Python dependencies
+                cd /d "%ORIGINAL_DIR%"
+                exit /b 1
+            )
         )
     )
     echo [SUCCESS] Python dependencies installed
@@ -180,11 +223,16 @@ if "%POSTGRES%"=="true" (
 REM Run migrations
 echo Running database migrations...
 if not "%CHECK%"=="true" (
-    "%VENV_PYTHON%" manage.py makemigrations
-    "%VENV_PYTHON%" manage.py migrate
+    if exist "%VENV_PYTHON%" (
+        "%VENV_PYTHON%" manage.py makemigrations
+        "%VENV_PYTHON%" manage.py migrate
+    ) else (
+        python manage.py makemigrations
+        python manage.py migrate
+    )
     if errorlevel 1 (
         echo [ERROR] Failed to run migrations
-        popd
+        cd /d "%ORIGINAL_DIR%"
         exit /b 1
     )
 )
@@ -194,7 +242,11 @@ REM Create superuser
 if "%CREATE_SU%"=="true" (
     echo Creating superuser...
     if not "%CHECK%"=="true" (
-        echo from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@hotel.com', 'admin123') if not User.objects.filter(username='admin').exists() else None | "%VENV_PYTHON%" manage.py shell
+        if exist "%VENV_PYTHON%" (
+            echo from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@hotel.com', 'admin123') if not User.objects.filter(username='admin').exists() else None | "%VENV_PYTHON%" manage.py shell
+        ) else (
+            echo from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@hotel.com', 'admin123') if not User.objects.filter(username='admin').exists() else None | python manage.py shell
+        )
         if errorlevel 1 (
             echo [WARNING] Superuser may already exist or creation failed
         ) else (
@@ -206,7 +258,11 @@ if "%CREATE_SU%"=="true" (
 REM Load seed data
 echo Loading seed data...
 if not "%CHECK%"=="true" (
-    "%VENV_PYTHON%" seed_data.py
+    if exist "%VENV_PYTHON%" (
+        "%VENV_PYTHON%" seed_data.py
+    ) else (
+        python seed_data.py
+    )
     if errorlevel 1 (
         echo [WARNING] Seed data loading failed or already loaded
     )
@@ -217,14 +273,18 @@ REM Collect static files
 if "%NO_COLLECTSTATIC%"=="false" (
     echo Collecting static files...
     if not "%CHECK%"=="true" (
-        "%VENV_PYTHON%" manage.py collectstatic --noinput
+        if exist "%VENV_PYTHON%" (
+            "%VENV_PYTHON%" manage.py collectstatic --noinput
+        ) else (
+            python manage.py collectstatic --noinput
+        )
     )
     echo [SUCCESS] Static files collected
 ) else (
     echo [WARNING] Skipping static files collection
 )
 
-popd
+cd /d "%ORIGINAL_DIR%"
 
 REM Frontend Setup
 echo.
@@ -237,10 +297,11 @@ where npm >nul 2>&1
 if not errorlevel 1 (
     if not exist "%FRONTEND_DIR%" (
         echo [ERROR] Frontend directory not found: %FRONTEND_DIR%
+        cd /d "%ORIGINAL_DIR%"
         exit /b 1
     )
 
-    pushd "%FRONTEND_DIR%"
+    cd /d "%FRONTEND_DIR%"
 
     REM Install dependencies
     if "%SKIP_DEPS%"=="false" (
@@ -249,7 +310,7 @@ if not errorlevel 1 (
             npm install
             if errorlevel 1 (
                 echo [ERROR] Failed to install Node.js dependencies
-                popd
+                cd /d "%ORIGINAL_DIR%"
                 exit /b 1
             )
         )
@@ -266,8 +327,7 @@ if not errorlevel 1 (
         )
         echo [SUCCESS] Development dependencies installed
     )
-
-    popd
+    cd /d "%ORIGINAL_DIR%"
 ) else (
     echo [WARNING] Skipping frontend setup (Node.js/npm not available)
 )
