@@ -1,93 +1,577 @@
-# hotel-reservation
+# Hotel Reservation Management System
 
+A modern, full-stack hotel reservation management system built with Django REST Framework and React TypeScript. This system provides comprehensive functionality for managing hotel rooms, customers, and reservations with advanced features like double-booking prevention and real-time availability checking.
 
+## 🏨 Features
 
-## Getting started
+### Core Functionality
+- **User Authentication**: Secure JWT-based authentication with role-based access control (Admin/Staff)
+- **Room Management**: Full CRUD operations for rooms with filtering and search capabilities
+- **Customer Management**: Complete customer database with sensitive data masking
+- **Reservation Management**: Advanced booking system with double-booking prevention
+- **Availability Checking**: Real-time room availability search with date range validation
+- **Dashboard**: Real-time statistics and activity monitoring
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Business Rules
+- **Double-Booking Prevention**: Strict validation prevents overlapping reservations
+- **Capacity Validation**: Enforces guest limits based on room capacity
+- **Maintenance Restrictions**: Prevents booking rooms under maintenance
+- **Data Privacy**: Government ID numbers are masked in the UI
+- **Date Validation**: Ensures check-out dates are after check-in dates
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 🏗️ Architecture
 
-## Add your files
+### Backend
+- **Framework**: Django 6.1 with Django REST Framework
+- **Authentication**: JWT tokens with refresh token rotation
+- **Database**: SQLite (development), PostgreSQL (production ready)
+- **API Design**: RESTful API with proper HTTP status codes
+- **Validation**: Comprehensive validation at model and serializer levels
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### Frontend
+- **Framework**: React 18 with TypeScript
+- **Routing**: React Router v6
+- **HTTP Client**: Axios with interceptors for token management
+- **State Management**: React Context API
+- **Styling**: Custom CSS with premium hotel theme
 
+### Database Schema
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/sridharreddy7093/hotel-reservation.git
-git branch -M main
-git push -uf origin main
+Users (Custom User Model)
+├── id, username, email, role (admin/staff)
+├── first_name, last_name
+└── timestamps
+
+RoomTypes
+├── id, name, description
+├── base_price
+└── timestamps
+
+Rooms
+├── id, room_number (unique)
+├── room_type (FK), floor, capacity
+├── price_per_night, status
+├── description
+└── timestamps
+
+Customers
+├── customer_id (PK, auto-generated)
+├── full_name, email (unique)
+├── phone, address
+├── government_id_number (unique, masked in UI)
+└── timestamps
+
+Reservations
+├── reservation_number (PK, auto-generated)
+├── customer (FK), room (FK)
+├── check_in_date, check_out_date
+├── number_of_guests, booking_status
+└── timestamps
 ```
 
-## Integrate with your tools
+## 📜 Setup & Start Scripts
 
-* [Set up project integrations](https://gitlab.com/sridharreddy7093/hotel-reservation/-/settings/integrations)
+The project includes automated setup and start scripts for both Windows (PowerShell) and Linux/macOS (Bash).
 
-## Collaborate with your team
+### Quick Start
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+**Windows (PowerShell):**
+```powershell
+# Setup
+.\setup.ps1
 
-## Test and Deploy
+# Start
+.\start.ps1
 
-Use the built-in continuous integration in GitLab.
+# Stop
+.\stop.ps1
+```
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+**Linux/macOS (Bash):**
+```bash
+# Make scripts executable
+chmod +x setup.sh start.sh stop.sh
 
-***
+# Setup
+./setup.sh
 
-# Editing this README
+# Start
+./start.sh
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+# Stop
+./stop.sh
+```
 
-## Suggestions for a good README
+### Setup Script Options
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+| Option | Description |
+|--------|-------------|
+| `--postgres` | Configure for PostgreSQL instead of SQLite |
+| `--create-su` | Create Django superuser (admin/admin123) |
+| `--skip-deps` | Skip Python/Node dependency installation |
+| `--force` | Force recreate virtual environment |
+| `--no-collectstatic` | Skip static files collection |
+| `--dev` | Install development dependencies |
+| `--check` | Check if everything is installed without making changes |
 
-## Name
-Choose a self-explaining name for your project.
+**Examples:**
+```powershell
+# Full setup with PostgreSQL and superuser
+.\setup.ps1 --postgres --create-su
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+# Quick check without changes
+.\setup.ps1 --check
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+# Development setup with all dependencies
+.\setup.ps1 --dev
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### Start Script Options
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+| Option | Description |
+|--------|-------------|
+| `--remote` | Bind to 0.0.0.0 for external access (uses actual IP) |
+| `--postgres` | Use PostgreSQL instead of SQLite |
+| `--bck` | Run in background with nohup |
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+**Examples:**
+```powershell
+# Local development
+.\start.ps1
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+# Remote access with PostgreSQL
+.\start.ps1 --remote --postgres
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+# Background mode for production
+.\start.ps1 --remote --postgres --bck
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### Remote Access
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+When using `--remote` flag, the scripts will:
+- Automatically detect your local IP address
+- Bind services to `0.0.0.0` for external access
+- Display URLs with your actual IP instead of localhost
+- Configure Vite for remote access (frontend)
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+Example output:
+```
+Configuration:
+  Remote Mode: Enabled (IP: 192.168.1.100)
+  Database: PostgreSQL
+  Background: Enabled
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+Backend API: http://192.168.1.100:8000/api
+Frontend UI: http://192.168.1.100:3000
+```
 
-## License
-For open source projects, say how it is licensed.
+### Background Mode
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+When using `--bck` flag:
+- Services run in background using nohup/Start-Process
+- Process IDs are saved for cleanup
+- Logs are written to `backend.log` and `frontend.log`
+- Use `stop.ps1` or `stop.sh` to stop services
+
+## 🚀 Manual Setup Instructions
+
+### Prerequisites
+- Python 3.8+
+- Node.js 16+ (for frontend)
+- pip (Python package manager)
+- Virtual environment (recommended)
+
+### Backend Setup
+
+1. **Navigate to backend directory**
+```bash
+cd backend
+```
+
+2. **Create virtual environment**
+```bash
+python -m venv venv
+
+# On Windows:
+venv\Scripts\activate
+
+# On macOS/Linux:
+source venv/bin/activate
+```
+
+3. **Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+4. **Configure environment variables**
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env with your configuration
+# For development, the defaults should work fine
+```
+
+5. **Run database migrations**
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+6. **Load seed data**
+```bash
+python seed_data.py
+```
+
+7. **Start the development server**
+```bash
+python manage.py runserver
+```
+
+The backend API will be available at `http://localhost:8000`
+
+### Frontend Setup
+
+1. **Navigate to frontend directory**
+```bash
+cd frontend
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Configure environment variables**
+```bash
+# The .env file is already configured for development
+# VITE_API_URL=http://localhost:8000/api
+```
+
+4. **Start the development server**
+```bash
+npm run dev
+```
+
+The frontend will be available at `http://localhost:3000`
+
+## 🔧 Environment Variables
+
+### Backend (.env)
+```env
+# Database Configuration
+DB_NAME=hotel_reservation
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+
+# Django Configuration
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# JWT Configuration
+JWT_ACCESS_TOKEN_LIFETIME=60
+JWT_REFRESH_TOKEN_LIFETIME=1440
+```
+
+### Frontend (.env)
+```env
+VITE_API_URL=http://localhost:8000/api
+```
+
+## 📊 Database & Migrations
+
+### Migration Files
+- `authentication/migrations/0001_initial.py` - Custom user model
+- `rooms/migrations/0001_initial.py` - Room types and rooms
+- `customers/migrations/0001_initial.py` - Customer model
+- `customers/migrations/0002_alter_customer_customer_id.py` - Auto-generated customer IDs
+- `reservations/migrations/0001_initial.py` - Reservation model
+
+### Running Migrations
+```bash
+# Create new migrations
+python manage.py makemigrations
+
+# Apply migrations
+python manage.py migrate
+
+# Show migration status
+python manage.py showmigrations
+```
+
+## 🌱 Seed Data
+
+The seed data script creates realistic demo data:
+
+### Users
+- **Admin**: username `admin`, password `admin123`
+- **Staff**: username `staff`, password `staff123`
+
+### Room Types
+- Standard ($100/night)
+- Deluxe ($200/night)
+- Suite ($400/night)
+
+### Rooms
+- 22 rooms across 8 floors
+- Various capacities (2-5 guests)
+- Mixed statuses (available, occupied, maintenance)
+
+### Customers
+- 8 sample customers with realistic data
+- Masked government IDs for privacy
+
+### Reservations
+- 8 sample reservations
+- Various statuses (pending, confirmed, completed, cancelled)
+- Different date ranges for testing
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+# Run all tests
+python manage.py test
+
+# Run specific app tests
+python manage.py test authentication
+python manage.py test rooms
+python manage.py test customers
+python manage.py test reservations
+
+# Run with coverage
+pip install coverage
+coverage run --source='.' manage.py test
+coverage report
+```
+
+### Test Coverage
+- **Authentication**: Registration, login, protected routes
+- **Rooms**: CRUD operations, validation, search
+- **Customers**: CRUD operations, search, data masking
+- **Reservations**: CRUD operations, double-booking prevention, availability checking
+
+### Critical Test Cases
+- ✅ Exact overlap prevention
+- ✅ Partial overlap prevention
+- ✅ Nested overlap prevention
+- ✅ Checkout = next check-in (allowed)
+- ✅ Cancelled reservations don't block availability
+- ✅ Capacity validation
+- ✅ Maintenance room restrictions
+
+## 📡 API Documentation
+
+### Authentication Endpoints
+- `POST /api/auth/register/` - User registration
+- `POST /api/auth/login/` - User login (returns JWT tokens)
+- `POST /api/auth/logout/` - User logout
+- `GET /api/auth/profile/` - Get current user profile
+
+### Room Endpoints
+- `GET /api/rooms/` - List all rooms (with filtering)
+- `POST /api/rooms/` - Create new room (admin only)
+- `GET /api/rooms/{id}/` - Get room details
+- `PUT /api/rooms/{id}/` - Update room (admin only)
+- `DELETE /api/rooms/{id}/` - Delete room (admin only)
+- `GET /api/rooms/search/` - Advanced room search
+- `GET /api/rooms/types/` - List room types
+- `POST /api/rooms/types/` - Create room type (admin only)
+
+### Customer Endpoints
+- `GET /api/customers/` - List all customers (with filtering)
+- `POST /api/customers/` - Create new customer
+- `GET /api/customers/{customer_id}/` - Get customer details
+- `PUT /api/customers/{customer_id}/` - Update customer
+- `DELETE /api/customers/{customer_id}/` - Delete customer
+- `GET /api/customers/search/` - Search customers
+
+### Reservation Endpoints
+- `GET /api/reservations/` - List all reservations (with filtering)
+- `POST /api/reservations/` - Create new reservation
+- `GET /api/reservations/{reservation_number}/` - Get reservation details
+- `PUT /api/reservations/{reservation_number}/` - Update reservation
+- `DELETE /api/reservations/{reservation_number}/` - Delete reservation
+- `POST /api/reservations/check-availability/` - Check room availability
+- `GET /api/reservations/statistics/` - Get dashboard statistics
+
+### API Response Format
+```json
+{
+  "count": 25,
+  "next": "http://localhost:8000/api/rooms/?page=2",
+  "previous": null,
+  "results": [...]
+}
+```
+
+### Error Response Format
+```json
+{
+  "field_name": ["Error message"],
+  "non_field_errors": ["General error message"]
+}
+```
+
+## 👤 Demo Credentials
+
+### Admin Account
+- **Username**: `admin`
+- **Password**: `admin123`
+- **Role**: Admin (full access)
+
+### Staff Account
+- **Username**: `staff`
+- **Password**: `staff123`
+- **Role**: Staff (limited access)
+
+## 🚀 Deployment
+
+### Backend Deployment (Production)
+
+1. **Update environment variables**
+```env
+DEBUG=False
+SECRET_KEY=your-production-secret-key
+DB_NAME=your-production-db
+DB_USER=your-production-user
+DB_PASSWORD=your-production-password
+ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+```
+
+2. **Use PostgreSQL**
+```python
+# In settings.py, uncomment PostgreSQL configuration
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
+    }
+}
+```
+
+3. **Collect static files**
+```bash
+python manage.py collectstatic
+```
+
+4. **Use a production WSGI server**
+```bash
+pip install gunicorn
+gunicorn hotel_reservation.wsgi:application
+```
+
+5. **Set up CORS for production**
+```python
+# In settings.py
+CORS_ALLOWED_ORIGINS = [
+    "https://yourdomain.com",
+    "https://www.yourdomain.com",
+]
+```
+
+### Frontend Deployment (Production)
+
+1. **Build the application**
+```bash
+npm run build
+```
+
+2. **Configure production API URL**
+```env
+VITE_API_URL=https://api.yourdomain.com/api
+```
+
+3. **Deploy to hosting service**
+- Vercel, Netlify, or any static hosting service
+- Or serve with Nginx/Apache
+
+### Docker Deployment (Optional)
+
+Create `Dockerfile` for backend:
+```dockerfile
+FROM python:3.11
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["gunicorn", "hotel_reservation.wsgi:application"]
+```
+
+Create `Dockerfile` for frontend:
+```dockerfile
+FROM node:18
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+CMD ["npm", "run", "preview"]
+```
+
+## 🎨 UI/UX Design
+
+### Color Palette
+- **Primary**: Deep Navy `#0F172A`
+- **Accent**: Champagne Gold `#C9A227`
+- **Background**: Warm Ivory `#F8F7F3`
+- **Cards**: White
+- **Text**: Dark Charcoal
+- **Success**: Green `#10B981`
+- **Warning**: Amber `#F59E0B`
+- **Error**: Red `#EF4444`
+
+### Design Features
+- Clean professional typography
+- Spacious layout with consistent padding
+- 12-16px card radius
+- 8-10px input/button radius
+- Elegant shadows for depth
+- Responsive design (desktop/tablet/mobile)
+- Professional sidebar navigation
+- Loading states and empty states
+- Toast notifications for feedback
+- Confirmation dialogs for destructive actions
+
+## 🔒 Security Features
+
+- **JWT Authentication**: Secure token-based authentication
+- **Password Hashing**: Django's secure password hashing
+- **CORS Protection**: Configured CORS for API access
+- **SQL Injection Prevention**: Django ORM parameterized queries
+- **XSS Protection**: Django's built-in XSS protection
+- **CSRF Protection**: Django's CSRF tokens
+- **Data Masking**: Sensitive government IDs masked in UI
+- **Role-Based Access**: Admin vs staff permissions
+
+## 📝 License
+
+This project is created for educational purposes.
+
+## 🤝 Contributing
+
+This is a demonstration project. For contributions:
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## 📞 Support
+
+For issues or questions:
+- Check the API documentation above
+- Review the test files for usage examples
+- Examine the seed data for data structure reference
+
+---
+
+**Built with ❤️ using Django REST Framework and React TypeScript**

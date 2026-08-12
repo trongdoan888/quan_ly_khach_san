@@ -1,0 +1,194 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+db.sqlite3-shm
+db.sqlite3-wal
+/media
+/staticfiles
+/static
+/static_root
+/media_root
+
+# Django specific
+*.pot
+*.mo
+*.pyc
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.staging
+.env.test
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.spyderproject
+.spyproject
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Frontend build output
+dist/
+dist-ssr/
+*.local
+.vite/
+.cache/
+.next/
+out/
+build/
+.nuxt/
+.turbo/
+
+# Logs and runtime files
+backend.log
+frontend.log
+backend.pid
+frontend.pid
+*.bak
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# OS files
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Testing
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Migration backups
+*/migrations/*.bak
+migrations/*.pyc
+
+# Script generated files
+backend/backend.log
+backend/backend.pid
+frontend/frontend.log
+frontend/frontend.pid
+frontend/vite.config.ts.bak
+
+# Database files (if using SQLite in development)
+backend/db.sqlite3
+backend/db.sqlite3-journal
+backend/db.sqlite3-shm
+backend/db.sqlite3-wal
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.cache/
+tmp/
+temp/
+
+# Package manager files
+.pip-cache/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment specific
+.vscode/settings.json
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/shelf/
+.idea/dictionaries
+.idea/libraries/
+.idea/caches/
+.idea/modules.xml
+
+# MacOS
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
