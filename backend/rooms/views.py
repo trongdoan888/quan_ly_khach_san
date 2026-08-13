@@ -36,6 +36,13 @@ class RoomListCreateView(generics.ListCreateAPIView):
     search_fields = ['room_number', 'description']
     ordering_fields = ['room_number', 'price_per_night', 'floor']
     ordering = ['room_number']
+    
+    def perform_create(self, serializer):
+        # Only admins can create rooms
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can create rooms")
+        serializer.save()
 
 
 class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):

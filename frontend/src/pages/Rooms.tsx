@@ -210,26 +210,9 @@ const Rooms: React.FC = () => {
   const finalRooms = Array.isArray(rooms) ? rooms : [];
   const finalRoomTypes = Array.isArray(roomTypes) ? roomTypes : [];
 
-  console.log('Rendering rooms page with', finalRooms.length, 'rooms');
-  console.log('Rooms data:', finalRooms);
-  console.log('Loading state:', loading);
-  console.log('Room types:', finalRoomTypes);
-  console.log('Is admin:', isAdmin);
-
   try {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#F8F7F3', padding: '2rem' }}>
-        {/* Debug: Always visible header */}
-        <div style={{ backgroundColor: '#C9A227', color: '#0F172A', padding: '1rem', marginBottom: '2rem', borderRadius: '8px' }}>
-          <h2 style={{ margin: 0 }}>Rooms Page Debug</h2>
-          <p style={{ margin: '0.5rem 0 0 0' }}>
-            Loading: {loading ? 'Yes' : 'No'} | 
-            Rooms: {finalRooms.length} | 
-            Room Types: {finalRoomTypes.length} | 
-            Admin: {isAdmin ? 'Yes' : 'No'}
-          </p>
-        </div>
-
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
             <h1 style={{ marginBottom: '0.5rem', color: '#0F172A' }}>Rooms</h1>
@@ -254,11 +237,15 @@ const Rooms: React.FC = () => {
                 onChange={(e) => setFilters({ ...filters, room_type: e.target.value })}
               >
                 <option value="">All Types</option>
-                {finalRoomTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
-                  </option>
-                ))}
+                {finalRoomTypes.length > 0 ? (
+                  finalRoomTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>Loading room types...</option>
+                )}
               </select>
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -391,11 +378,15 @@ const Rooms: React.FC = () => {
                     required
                   >
                     <option value="">Select type</option>
-                    {finalRoomTypes.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name} (${parseFloat(type.base_price as string).toFixed(2)}/night)
-                      </option>
-                    ))}
+                    {finalRoomTypes.length > 0 ? (
+                      finalRoomTypes.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name} (${parseFloat(type.base_price as string).toFixed(2)}/night)
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>Loading room types...</option>
+                    )}
                   </select>
                 </div>
                 <div className="grid grid-cols-2" style={{ gap: '1rem' }}>
