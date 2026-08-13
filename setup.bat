@@ -143,6 +143,8 @@ if errorlevel 1 (
 
 echo [SUCCESS] Prerequisites check complete
 echo.
+echo [DEBUG] Press any key to continue to backend setup...
+pause
 
 REM Backend Setup
 echo ========================================
