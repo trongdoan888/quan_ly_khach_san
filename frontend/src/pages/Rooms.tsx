@@ -59,9 +59,9 @@ const Rooms: React.FC = () => {
       if (Array.isArray(response)) {
         console.log('Processing as array, length:', response.length);
         setRooms(response);
-      } else if (response && 'results' in response) {
-        console.log('Processing as paginated response, results:', response.results);
-        setRooms(response.results);
+      } else if (response && typeof response === 'object' && 'results' in response) {
+        console.log('Processing as paginated response, results:', (response as any).results);
+        setRooms((response as any).results);
       } else {
         console.warn('Unexpected data structure:', response);
         setRooms([]);
@@ -88,8 +88,8 @@ const Rooms: React.FC = () => {
       // Handle both array and paginated response
       if (Array.isArray(response)) {
         setRoomTypes(response);
-      } else if (response && 'results' in response) {
-        setRoomTypes(response.results);
+      } else if (response && typeof response === 'object' && 'results' in response) {
+        setRoomTypes((response as any).results);
       } else {
         console.warn('Room types response structure:', response);
         setRoomTypes([]);
@@ -115,8 +115,8 @@ const Rooms: React.FC = () => {
       // Handle different response structures
       if (Array.isArray(data)) {
         setRooms(data);
-      } else if ('results' in data) {
-        setRooms(data.results);
+      } else if (data && typeof data === 'object' && 'results' in data) {
+        setRooms((data as any).results);
       } else {
         setRooms([]);
       }
