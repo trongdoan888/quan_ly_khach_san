@@ -65,10 +65,12 @@ set VENV_PYTHON=%BACKEND_DIR%\venv\Scripts\python.exe
 REM Get local IP address if remote mode
 set LOCAL_IP=localhost
 if "%REMOTE%"=="true" (
-    REM Try to get local IP using PowerShell
-    for /f "tokens=2 delims=:" %%A in ('powershell -Command "Get-NetIPAddress -AddressFamily IPv4 -InterfaceAlias Wi*,Eth* | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.*' } | Select-Object -First 1 -ExpandProperty IPAddress" 2^>nul') do (
+    REM Try to get local IP using ipconfig
+    for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /i "IPv4 Address" ^| findstr /v "127.0.0.1"') do (
         set LOCAL_IP=%%A
+        goto :found_ip
     )
+    :found_ip
     if "!LOCAL_IP!"=="localhost" (
         set LOCAL_IP=0.0.0.0
     )
@@ -92,7 +94,8 @@ if "%POSTGRES%"=="true" (
     echo Configuring for PostgreSQL...
     set ENV_FILE=%BACKEND_DIR%.env
     if exist "%ENV_FILE%" (
-        powershell -Command "(Get-Content '%ENV_FILE%') -replace 'DB_NAME=.*', 'DB_NAME=hotel_reservation' -replace 'DB_USER=.*', 'DB_USER=postgres' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=postgres' -replace 'DB_HOST=.*', 'DB_HOST=localhost' -replace 'DB_PORT=.*', 'DB_PORT=5432' | Set-Content '%ENV_FILE%'"
+        REM Using CMD to replace values in .env file
+        powershell -NoProfile -NonInteractive -Command "(Get-Content '%ENV_FILE%') -replace 'DB_NAME=.*', 'DB_NAME=hotel_reservation' -replace 'DB_USER=.*', 'DB_USER=postgres' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=postgres' -replace 'DB_HOST=.*', 'DB_HOST=localhost' -replace 'DB_PORT=.*', 'DB_PORT=5432' | Set-Content '%ENV_FILE%'"
     )
     echo [SUCCESS] PostgreSQL configured
 )
@@ -235,7 +238,7 @@ if "%REMOTE%"=="true" (
     echo Configuring Vite for remote access...
     set VITE_CONFIG=%FRONTEND_DIR%\vite.config.ts
     if exist "%VITE_CONFIG%" (
-        powershell -Command "(Get-Content '%VITE_CONFIG%') -replace \"host: 'localhost'\", \"host: '0.0.0.0'\" | Set-Content '%VITE_CONFIG%'"
+        powershell -NoProfile -NonInteractive -Command "(Get-Content '%VITE_CONFIG%') -replace \"host: 'localhost'\", \"host: '0.0.0.0'\" | Set-Content '%VITE_CONFIG%'"
     )
 )
 

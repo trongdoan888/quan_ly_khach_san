@@ -2,6 +2,8 @@
 REM Hotel Reservation System - Setup Script (Windows CMD)
 REM Usage: setup.bat [options]
 
+setlocal enabledelayedexpansion
+
 REM Get script directory and save original directory
 set SCRIPT_DIR=%~dp0
 set ORIGINAL_DIR=%cd%
@@ -60,6 +62,8 @@ if /i "%~1"=="--skip-node" (
     goto parse_args
 )
 echo Unknown option: %~1
+cd /d "%ORIGINAL_DIR%"
+endlocal
 exit /b 1
 :done_parsing
 
@@ -83,12 +87,18 @@ echo Checking prerequisites...
 where python >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Python is not installed or not in PATH
+    echo [INFO] Please install Python 3.8 or higher from: https://www.python.org/
+    cd /d "%ORIGINAL_DIR%"
+    endlocal
     exit /b 1
 )
 
 where pip >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] pip is not installed or not in PATH
+    echo [INFO] pip should be installed with Python
+    cd /d "%ORIGINAL_DIR%"
+    endlocal
     exit /b 1
 )
 
@@ -101,6 +111,7 @@ if errorlevel 1 (
     echo [INFO] Or use --skip-node flag to skip Node.js installation (backend only)
     if "%SKIP_NODE%"=="false" (
         cd /d "%ORIGINAL_DIR%"
+        endlocal
         exit /b 1
     )
 ) else (
@@ -120,6 +131,7 @@ echo ========================================
 if not exist "%BACKEND_DIR%" (
     echo [ERROR] Backend directory not found: %BACKEND_DIR%
     cd /d "%ORIGINAL_DIR%"
+    endlocal
     exit /b 1
 )
 
@@ -153,6 +165,7 @@ if not exist "%VENV_DIR%" (
             if errorlevel 1 (
                 echo [ERROR] Virtual environment creation failed completely
                 cd /d "%ORIGINAL_DIR%"
+                endlocal
                 exit /b 1
             )
         )
@@ -209,6 +222,7 @@ if "%SKIP_DEPS%"=="false" (
             if errorlevel 1 (
                 echo [ERROR] Failed to install Python dependencies
                 cd /d "%ORIGINAL_DIR%"
+                endlocal
                 exit /b 1
             )
         )
@@ -223,7 +237,8 @@ if "%POSTGRES%"=="true" (
     echo Configuring for PostgreSQL...
     set ENV_FILE=%BACKEND_DIR%.env
     if exist "%ENV_FILE%" (
-        powershell -Command "(Get-Content '%ENV_FILE%') -replace 'DB_NAME=.*', 'DB_NAME=hotel_reservation' -replace 'DB_USER=.*', 'DB_USER=postgres' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=postgres' -replace 'DB_HOST=.*', 'DB_HOST=localhost' -replace 'DB_PORT=.*', 'DB_PORT=5432' | Set-Content '%ENV_FILE%'"
+        REM Using CMD to replace values in .env file
+        powershell -NoProfile -NonInteractive -Command "(Get-Content '%ENV_FILE%') -replace 'DB_NAME=.*', 'DB_NAME=hotel_reservation' -replace 'DB_USER=.*', 'DB_USER=postgres' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=postgres' -replace 'DB_HOST=.*', 'DB_HOST=localhost' -replace 'DB_PORT=.*', 'DB_PORT=5432' | Set-Content '%ENV_FILE%'"
     )
     echo [SUCCESS] PostgreSQL configured
 )
@@ -241,6 +256,7 @@ if not "%CHECK%"=="true" (
     if errorlevel 1 (
         echo [ERROR] Failed to run migrations
         cd /d "%ORIGINAL_DIR%"
+        endlocal
         exit /b 1
     )
 )
@@ -306,6 +322,7 @@ if not errorlevel 1 (
     if not exist "%FRONTEND_DIR%" (
         echo [ERROR] Frontend directory not found: %FRONTEND_DIR%
         cd /d "%ORIGINAL_DIR%"
+        endlocal
         exit /b 1
     )
 
@@ -319,6 +336,7 @@ if not errorlevel 1 (
             if errorlevel 1 (
                 echo [ERROR] Failed to install Node.js dependencies
                 cd /d "%ORIGINAL_DIR%"
+                endlocal
                 exit /b 1
             )
         )
@@ -356,3 +374,7 @@ echo.
 echo To start the application, run:
 echo   start.bat
 echo.
+
+cd /d "%ORIGINAL_DIR%"
+endlocal
+exit /b 0
