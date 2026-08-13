@@ -203,8 +203,8 @@ echo Starting backend in background...
 
 REM Start backend in background
 cd /d "%BACKEND_DIR%"
-echo Starting: "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
-start /MIN "Hotel Backend" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
+echo Starting: %VENV_PYTHON% manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
+start /MIN cmd /c "%VENV_PYTHON% manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%"
 cd /d "%ORIGINAL_DIR%"
 
 REM Wait a moment for backend to start
