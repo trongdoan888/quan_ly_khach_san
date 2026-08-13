@@ -3,8 +3,6 @@ from .models import Room, RoomType
 
 
 class RoomTypeSerializer(serializers.ModelSerializer):
-    base_price = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=False)
-    
     class Meta:
         model = RoomType
         fields = ['id', 'name', 'description', 'base_price', 'created_at', 'updated_at']
@@ -14,7 +12,6 @@ class RoomTypeSerializer(serializers.ModelSerializer):
 class RoomSerializer(serializers.ModelSerializer):
     room_type_name = serializers.CharField(source='room_type.name', read_only=True)
     room_type_details = RoomTypeSerializer(source='room_type', read_only=True)
-    price_per_night = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=False)
     
     class Meta:
         model = Room
