@@ -37,8 +37,20 @@ const Rooms: React.FC = () => {
     try {
       setLoading(true);
       const data = await roomService.getRooms();
-      setRooms(data.results);
+      console.log('Rooms API response:', data);
+      // Handle different response structures
+      if (Array.isArray(data)) {
+        setRooms(data);
+      } else if (data.results) {
+        setRooms(data.results);
+      } else if (data.data) {
+        setRooms(data.data);
+      } else {
+        console.warn('Unexpected data structure:', data);
+        setRooms([]);
+      }
     } catch (error) {
+      console.error('Failed to load rooms:', error);
       addToast('error', 'Failed to load rooms');
     } finally {
       setLoading(false);
@@ -48,8 +60,10 @@ const Rooms: React.FC = () => {
   const fetchRoomTypes = async () => {
     try {
       const data = await roomService.getRoomTypes();
+      console.log('Room types data:', data);
       setRoomTypes(data);
     } catch (error) {
+      console.error('Failed to load room types:', error);
       addToast('error', 'Failed to load room types');
     }
   };
@@ -63,7 +77,17 @@ const Rooms: React.FC = () => {
       if (filters.search) params.search = filters.search;
       
       const data = await roomService.getRooms(params);
-      setRooms(data.results);
+      console.log('Filtered rooms response:', data);
+      // Handle different response structures
+      if (Array.isArray(data)) {
+        setRooms(data);
+      } else if (data.results) {
+        setRooms(data.results);
+      } else if (data.data) {
+        setRooms(data.data);
+      } else {
+        setRooms([]);
+      }
     } catch (error) {
       addToast('error', 'Failed to filter rooms');
     } finally {
