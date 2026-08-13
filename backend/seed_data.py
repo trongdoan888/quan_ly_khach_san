@@ -13,7 +13,232 @@ from customers.models import Customer
 from reservations.models import Reservation
 
 
+def generate_sample_data():
+    """Generate sample data for testing: 50 customers, 80 rooms (4 floors × 20), 3 months of reservations"""
+    print("Generating sample data...")
+    
+    # Create Users
+    print("Creating users...")
+    admin_user, created = User.objects.get_or_create(
+        username='admin',
+        defaults={
+            'email': 'admin@hotel.com',
+            'first_name': 'Admin',
+            'last_name': 'User',
+            'role': 'admin',
+            'is_staff': True,
+            'is_superuser': True
+        }
+    )
+    if created:
+        admin_user.set_password('admin123')
+        admin_user.save()
+    
+    staff_user, created = User.objects.get_or_create(
+        username='staff',
+        defaults={
+            'email': 'staff@hotel.com',
+            'first_name': 'Staff',
+            'last_name': 'User',
+            'role': 'staff',
+            'is_staff': True
+        }
+    )
+    if created:
+        staff_user.set_password('staff123')
+        staff_user.save()
+    
+    # Create Room Types
+    print("Creating room types...")
+    standard_type, _ = RoomType.objects.get_or_create(
+        name='Standard',
+        defaults={
+            'description': 'Comfortable standard room with basic amenities',
+            'base_price': 100.00
+        }
+    )
+    
+    deluxe_type, _ = RoomType.objects.get_or_create(
+        name='Deluxe',
+        defaults={
+            'description': 'Spacious deluxe room with premium amenities',
+            'base_price': 200.00
+        }
+    )
+    
+    suite_type, _ = RoomType.objects.get_or_create(
+        name='Suite',
+        defaults={
+            'description': 'Luxury suite with separate living area and premium services',
+            'base_price': 400.00
+        }
+    )
+    
+    # Clear existing rooms and reservations
+    print("Clearing existing data...")
+    Reservation.objects.all().delete()
+    Room.objects.all().delete()
+    Customer.objects.all().delete()
+    
+    # Create Rooms - 4 floors × 20 rooms = 80 rooms total
+    print("Creating 80 rooms (4 floors × 20 rooms per floor)...")
+    room_types = [standard_type, deluxe_type, suite_type]
+    room_type_weights = [0.5, 0.35, 0.15]  # 50% Standard, 35% Deluxe, 15% Suite
+    
+    rooms = []
+    for floor in range(1, 5):  # Floors 1-4
+        for room_num in range(1, 21):  # 20 rooms per floor
+            room_number = f"{floor}{room_num:02d}"
+            room_type = random.choices(room_types, weights=room_type_weights)[0]
+            
+            # Capacity based on room type
+            if room_type.name == 'Standard':
+                capacity = random.choice([2, 3])
+                price = 100.00 + (floor * 5) + (capacity * 5)
+            elif room_type.name == 'Deluxe':
+                capacity = random.choice([3, 4])
+                price = 200.00 + (floor * 10) + (capacity * 10)
+            else:  # Suite
+                capacity = random.choice([4, 5])
+                price = 400.00 + (floor * 15) + (capacity * 15)
+            
+            # Random status
+            status = random.choices(
+                ['available', 'occupied', 'maintenance'],
+                weights=[0.6, 0.3, 0.1]
+            )[0]
+            
+            room = Room.objects.create(
+                room_number=room_number,
+                room_type=room_type,
+                floor=floor,
+                capacity=capacity,
+                price_per_night=price,
+                status=status,
+                description=f'{room_type.name} room on floor {floor} with capacity for {capacity} guests.'
+            )
+            rooms.append(room)
+    
+    print(f"Created {len(rooms)} rooms")
+    
+    # Create 50 Customers
+    print("Creating 50 customers...")
+    first_names = ['John', 'Jane', 'Robert', 'Emily', 'Michael', 'Sarah', 'David', 'Lisa', 'James', 'Maria',
+                   'William', 'Jennifer', 'Richard', 'Patricia', 'Joseph', 'Linda', 'Thomas', 'Barbara', 'Charles', 'Susan',
+                   'Christopher', 'Jessica', 'Daniel', 'Karen', 'Matthew', 'Nancy', 'Anthony', 'Betty', 'Mark', 'Helen', 'Donald',
+                   'Sandra', 'Paul', 'Ashley', 'Steven', 'Dorothy', 'Andrew', 'Carol', 'Joshua', 'Michelle', 'Kenneth', 'Laura',
+                   'Kevin', 'Shirley', 'Brian', 'Kimberly', 'George', 'Angela', 'Edward', 'Melissa', 'Ronald', 'Donna']
+    
+    last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
+                  'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin',
+                  'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker',
+                  'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores', 'Green', 'Adams',
+                  'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell', 'Carter', 'Roberts']
+    
+    customers = []
+    for i in range(50):
+        customer_id = f"CUST{(i + 1):03d}"
+        first_name = random.choice(first_names)
+        last_name = random.choice(last_names)
+        full_name = f"{first_name} {last_name}"
+        email = f"{first_name.lower()}.{last_name.lower()}{i}@email.com"
+        phone = f"+1{random.randint(200, 999)}{random.randint(100, 999)}{random.randint(1000, 9999)}"
+        address = f"{random.randint(1, 999)} {random.choice(['Main St', 'Oak Ave', 'Pine Rd', 'Elm St', 'Maple Dr', 'Cedar Ln', 'Birch Blvd', 'Spruce Way'])}, {random.choice(['City', 'Town', 'Village', 'County'])}, USA"
+        gov_id = f"{random.choice(['PASS', 'ID', 'LIC', 'DOC'])}{random.randint(100000, 999999)}"
+        
+        customer = Customer.objects.create(
+            customer_id=customer_id,
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            address=address,
+            government_id_number=gov_id
+        )
+        customers.append(customer)
+    
+    print(f"Created {len(customers)} customers")
+    
+    # Create Reservations for 3 months
+    print("Creating reservations for 3 months...")
+    today = datetime.now().date()
+    start_date = today - timedelta(days=30)  # Start 30 days ago
+    end_date = today + timedelta(days=90)  # End 90 days in future
+    
+    available_rooms = [r for r in rooms if r.status != 'maintenance']
+    
+    reservations = []
+    current_date = start_date
+    
+    while current_date <= end_date:
+        # Generate 5-10 reservations per day
+        num_reservations = random.randint(5, 10)
+        
+        for _ in range(num_reservations):
+            customer = random.choice(customers)
+            room = random.choice(available_rooms)
+            
+            # Random stay duration (1-7 days)
+            stay_duration = random.randint(1, 7)
+            check_in = current_date
+            check_out = current_date + timedelta(days=stay_duration)
+            
+            # Skip if check_out is beyond our range
+            if check_out > end_date:
+                continue
+            
+            # Check for double booking
+            overlapping = Reservation.objects.filter(
+                room=room,
+                booking_status__in=['pending', 'confirmed', 'completed'],
+                check_in_date__lt=check_out,
+                check_out_date__gt=check_in
+            ).exists()
+            
+            if overlapping:
+                continue
+            
+            # Random booking status
+            if check_in < today:
+                status = random.choice(['completed', 'cancelled'])
+            elif check_in == today:
+                status = random.choice(['confirmed', 'pending'])
+            else:
+                status = random.choice(['pending', 'confirmed'])
+            
+            # Number of guests based on room capacity
+            num_guests = random.randint(1, room.capacity)
+            
+            reservation = Reservation.objects.create(
+                reservation_number=f"RES-{uuid.uuid4().hex[:12].upper()}",
+                customer=customer,
+                room=room,
+                check_in_date=check_in,
+                check_out_date=check_out,
+                number_of_guests=num_guests,
+                booking_status=status
+            )
+            reservations.append(reservation)
+        
+        current_date += timedelta(days=1)
+    
+    print(f"Created {len(reservations)} reservations")
+    
+    print("\n" + "="*50)
+    print("Sample data generation completed successfully!")
+    print("="*50)
+    print(f"Users: {User.objects.count()}")
+    print(f"Room Types: {RoomType.objects.count()}")
+    print(f"Rooms: {Room.objects.count()} (4 floors × 20 rooms)")
+    print(f"Customers: {Customer.objects.count()}")
+    print(f"Reservations: {Reservation.objects.count()} (3 months)")
+    print("\nDemo credentials:")
+    print("  Admin: admin / admin123")
+    print("  Staff: staff / staff123")
+    print("="*50)
+
+
 def seed_data():
+    """Original seed data function for backward compatibility"""
     print("Seeding data...")
     
     # Create Users
@@ -196,4 +421,8 @@ def seed_data():
 
 
 if __name__ == '__main__':
-    seed_data()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == '--sample':
+        generate_sample_data()
+    else:
+        seed_data()

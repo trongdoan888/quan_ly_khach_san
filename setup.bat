@@ -25,6 +25,7 @@ set NO_COLLECTSTATIC=false
 set DEV=false
 set CHECK=false
 set SKIP_NODE=false
+set SEED_DATA=false
 
 REM Parse arguments
 :parse_args
@@ -66,6 +67,11 @@ if /i "%~1"=="--check" (
 )
 if /i "%~1"=="--skip-node" (
     set SKIP_NODE=true
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--seed-data" (
+    set SEED_DATA=true
     shift
     goto parse_args
 )
@@ -255,7 +261,12 @@ if "%CREATE_SU%"=="true" (
 REM Load seed data
 echo Loading seed data...
 if not "%CHECK%"=="true" (
-    "%VENV_PYTHON%" seed_data.py
+    if "%SEED_DATA%"=="true" (
+        echo [INFO] Generating sample data (50 customers, 80 rooms, 3 months of reservations)...
+        "%VENV_PYTHON%" seed_data.py --sample
+    ) else (
+        "%VENV_PYTHON%" seed_data.py
+    )
     if errorlevel 1 (
         echo [WARNING] Seed data loading failed or already loaded
     )

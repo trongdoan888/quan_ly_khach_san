@@ -11,6 +11,7 @@ set BCK=false
 set MULTIPLE=false
 set BACKEND_PORT=8000
 set FRONTEND_PORT=3000
+set SEED_DATA=false
 
 REM Parse arguments
 :parse_args
@@ -48,6 +49,11 @@ if /i "%~1"=="--port" (
         exit /b 1
     )
     set FRONTEND_PORT=%~1
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--seed-data" (
+    set SEED_DATA=true
     shift
     goto parse_args
 )
@@ -202,6 +208,23 @@ REM Wait a moment for backend to start
 timeout /t 3 /nobreak >nul
 
 echo [SUCCESS] Backend started in background
+
+REM Load sample data if requested
+if "%SEED_DATA%"=="true" (
+    echo.
+    echo ========================================
+    echo Loading Sample Data
+    echo ========================================
+    echo Loading sample data (50 customers, 80 rooms, 3 months of reservations)...
+    cd /d "%BACKEND_DIR%"
+    "%VENV_PYTHON%" seed_data.py --sample
+    if errorlevel 1 (
+        echo [WARNING] Sample data loading failed
+    ) else (
+        echo [SUCCESS] Sample data loaded
+    )
+    cd /d "%ORIGINAL_DIR%"
+)
 
 REM Start Frontend
 echo.

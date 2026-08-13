@@ -111,17 +111,18 @@ start.bat
 | `--dev` | Install development dependencies |
 | `--check` | Check if everything is installed without making changes |
 | `--skip-node` | Skip Node.js check (backend-only setup) |
+| `--seed-data` | Generate sample data (50 customers, 80 rooms, 3 months of reservations) |
 
 **Examples:**
-```powershell
-# Full setup with PostgreSQL and superuser
-.\setup.ps1 --postgres --create-su
+```cmd
+# Full setup with sample data
+setup.bat --seed-data
 
-# Quick check without changes
-.\setup.ps1 --check
+# Quick setup with PostgreSQL and sample data
+setup.bat --postgres --seed-data
 
-# Development setup with all dependencies
-.\setup.ps1 --dev
+# Development setup with all dependencies and sample data
+setup.bat --dev --seed-data
 ```
 
 ### Start Script Options
@@ -133,14 +134,18 @@ start.bat
 | `--bck` | Run in background with nohup |
 | `--multiple` | Allow multiple instances without killing existing processes |
 | `--port` | Specify custom ports (backend_port frontend_port) |
+| `--seed-data` | Load sample data after starting backend (50 customers, 80 rooms, 3 months) |
 
 **Examples:**
 ```cmd
 # Local development
 start.bat
 
-# Remote access with PostgreSQL
-start.bat --remote --postgres
+# Start with sample data
+start.bat --seed-data
+
+# Remote access with PostgreSQL and sample data
+start.bat --remote --postgres --seed-data
 
 # Background mode for production
 start.bat --remote --postgres --bck
@@ -227,8 +232,19 @@ python manage.py migrate
 
 6. **Load seed data**
 ```bash
+# Load basic seed data (8 customers, 22 rooms, sample reservations)
 python seed_data.py
+
+# Or generate extensive sample data (50 customers, 80 rooms, 3 months of reservations)
+python seed_data.py --sample
 ```
+
+**Sample Data Details:**
+- **Basic**: 8 customers, 22 rooms across 8 floors, sample reservations
+- **Extensive (--sample)**: 50 customers, 80 rooms (4 floors × 20 rooms), 3 months of reservations
+- Room distribution: 50% Standard, 35% Deluxe, 15% Suite
+- Reservation statuses: pending, confirmed, completed, cancelled
+- Random pricing based on floor, room type, and capacity
 
 7. **Start the development server**
 ```bash
