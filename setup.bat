@@ -148,6 +148,11 @@ REM Backend Setup
 echo ========================================
 echo Backend Setup
 echo ========================================
+echo [INFO] SEED_DATA flag: %SEED_DATA%
+echo [INFO] SKIP_NODE flag: %SKIP_NODE%
+echo [INFO] Current directory: %cd%
+echo [INFO] Backend directory: %BACKEND_DIR%
+echo.
 
 echo [INFO] Checking backend directory...
 if not exist "%BACKEND_DIR%" (
@@ -366,4 +371,7 @@ echo.
 
 cd /d "%ORIGINAL_DIR%"
 endlocal
+echo.
+echo [INFO] Setup script completed. Press any key to exit...
+pause >nul
 exit /b 0
