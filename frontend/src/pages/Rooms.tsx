@@ -83,11 +83,15 @@ const Rooms: React.FC = () => {
       console.log('Room types data:', response);
       console.log('Room types type:', typeof response);
       console.log('Is array:', Array.isArray(response));
+      console.log('Has results:', 'results' in response);
       
+      // Handle both array and paginated response
       if (Array.isArray(response)) {
         setRoomTypes(response);
+      } else if (response && 'results' in response) {
+        setRoomTypes(response.results);
       } else {
-        console.warn('Room types response is not an array:', response);
+        console.warn('Room types response structure:', response);
         setRoomTypes([]);
       }
     } catch (error: any) {

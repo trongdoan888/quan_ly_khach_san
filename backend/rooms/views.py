@@ -12,6 +12,7 @@ class RoomTypeListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     queryset = RoomType.objects.all()
     serializer_class = RoomTypeSerializer
+    pagination_class = None  # Disable pagination for room types
     
     def perform_create(self, serializer):
         # Only admins can create room types
