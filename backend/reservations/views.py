@@ -77,6 +77,10 @@ def check_availability(request):
     # Get all rooms that are not in maintenance
     available_rooms = Room.objects.filter(status__in=['available', 'occupied'])
     
+    # If a specific room is provided, filter by it
+    if data.get('room'):
+        available_rooms = available_rooms.filter(id=data['room'])
+    
     # Find rooms that have overlapping reservations (excluding cancelled)
     overlapping_reservations = Reservation.objects.filter(
         booking_status__in=['pending', 'confirmed', 'completed'],

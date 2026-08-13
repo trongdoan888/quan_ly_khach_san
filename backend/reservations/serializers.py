@@ -73,7 +73,7 @@ class ReservationCreateSerializer(ReservationSerializer):
 
 
 class AvailabilitySerializer(serializers.Serializer):
-    room = serializers.IntegerField()
+    room = serializers.IntegerField(required=False, allow_null=True)
     check_in_date = serializers.DateField()
     check_out_date = serializers.DateField()
-    number_of_guests = serializers.IntegerField(required=False)
+    number_of_guests = serializers.IntegerField(required=False, allow_null=True)
