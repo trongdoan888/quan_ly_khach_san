@@ -172,6 +172,9 @@ const Rooms: React.FC = () => {
     );
   }
 
+  console.log('Rendering rooms page with', rooms.length, 'rooms');
+  console.log('Rooms data:', rooms);
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>

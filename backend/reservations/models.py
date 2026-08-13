@@ -14,7 +14,7 @@ class Reservation(models.Model):
     ]
     
     reservation_number = models.CharField(max_length=20, unique=True, primary_key=True)
-    customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name='reservations')
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
     room = models.ForeignKey(Room, on_delete=models.PROTECT, related_name='reservations')
     check_in_date = models.DateField()
     check_out_date = models.DateField()

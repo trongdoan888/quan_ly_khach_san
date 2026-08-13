@@ -22,6 +22,15 @@ class RoomSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Ensure room_type_name is always populated
+        if instance.room_type:
+            data['room_type_name'] = instance.room_type.name
+        else:
+            data['room_type_name'] = 'Unknown'
+        return data
+    
     def validate_room_number(self, value):
         # Check if room number already exists (excluding current instance for updates)
         queryset = Room.objects.filter(room_number=value)
