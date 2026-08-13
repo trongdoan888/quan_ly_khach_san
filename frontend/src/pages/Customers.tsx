@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { customerService, Customer } from '../services/customerService';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const Customers: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -9,6 +10,8 @@ const Customers: React.FC = () => {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { addToast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   const [formData, setFormData] = useState({
     customer_id: '',
@@ -71,8 +74,12 @@ const Customers: React.FC = () => {
       await customerService.deleteCustomer(customer_id);
       addToast('success', 'Customer deleted successfully');
       fetchCustomers();
-    } catch (error) {
-      addToast('error', 'Failed to delete customer');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        addToast('error', 'Only admins can delete customers');
+      } else {
+        addToast('error', 'Failed to delete customer');
+      }
     }
   };
 
@@ -90,13 +97,17 @@ const Customers: React.FC = () => {
       setEditingCustomer(null);
       fetchCustomers();
     } catch (error: any) {
-      const errors = error.response?.data;
-      if (typeof errors === 'object') {
-        Object.entries(errors).forEach(([field, messages]) => {
-          addToast('error', `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`);
-        });
+      if (error.response?.status === 403) {
+        addToast('error', 'Only admins can create or update customers');
       } else {
-        addToast('error', 'Failed to save customer');
+        const errors = error.response?.data;
+        if (typeof errors === 'object') {
+          Object.entries(errors).forEach(([field, messages]) => {
+            addToast('error', `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`);
+          });
+        } else {
+          addToast('error', 'Failed to save customer');
+        }
       }
     }
   };

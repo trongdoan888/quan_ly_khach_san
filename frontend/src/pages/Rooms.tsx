@@ -97,8 +97,12 @@ const Rooms: React.FC = () => {
       await roomService.deleteRoom(id);
       addToast('success', 'Room deleted successfully');
       fetchRooms();
-    } catch (error) {
-      addToast('error', 'Failed to delete room');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        addToast('error', 'Only admins can delete rooms');
+      } else {
+        addToast('error', 'Failed to delete room');
+      }
     }
   };
 
@@ -116,13 +120,17 @@ const Rooms: React.FC = () => {
       setEditingRoom(null);
       fetchRooms();
     } catch (error: any) {
-      const errors = error.response?.data;
-      if (typeof errors === 'object') {
-        Object.entries(errors).forEach(([field, messages]) => {
-          addToast('error', `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`);
-        });
+      if (error.response?.status === 403) {
+        addToast('error', 'Only admins can create or update rooms');
       } else {
-        addToast('error', 'Failed to save room');
+        const errors = error.response?.data;
+        if (typeof errors === 'object') {
+          Object.entries(errors).forEach(([field, messages]) => {
+            addToast('error', `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`);
+          });
+        } else {
+          addToast('error', 'Failed to save room');
+        }
       }
     }
   };

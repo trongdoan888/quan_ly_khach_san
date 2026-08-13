@@ -10,11 +10,11 @@ const Layout: React.FC = () => {
   const { addToast } = useToast();
 
   const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/rooms', label: 'Rooms', icon: '🏠' },
-    { path: '/customers', label: 'Customers', icon: '👥' },
-    { path: '/reservations', label: 'Reservations', icon: '📅' },
-    { path: '/availability', label: 'Availability', icon: '🔍' },
+    { path: '/dashboard', label: 'Dashboard', icon: '📊', adminOnly: false },
+    { path: '/rooms', label: 'Rooms', icon: '🏠', adminOnly: false },
+    { path: '/customers', label: 'Customers', icon: '👥', adminOnly: false },
+    { path: '/reservations', label: 'Reservations', icon: '📅', adminOnly: false },
+    { path: '/availability', label: 'Availability', icon: '🔍', adminOnly: false },
   ];
 
   const handleLogout = async () => {
@@ -62,7 +62,7 @@ const Layout: React.FC = () => {
 
         {/* Navigation */}
         <nav style={{ flex: 1, padding: '1rem 0' }}>
-          {navItems.map((item) => {
+          {navItems.filter(item => !item.adminOnly || user?.role === 'admin').map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <Link

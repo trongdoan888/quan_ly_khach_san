@@ -24,6 +24,13 @@ class ReservationListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return ReservationCreateSerializer
         return ReservationSerializer
+    
+    def perform_create(self, serializer):
+        # Only admins can create reservations
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can create reservations")
+        serializer.save()
 
 
 class ReservationDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -31,6 +38,20 @@ class ReservationDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Reservation.objects.select_related('customer', 'room').all()
     serializer_class = ReservationSerializer
     lookup_field = 'reservation_number'
+    
+    def perform_update(self, serializer):
+        # Only admins can update reservations
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can update reservations")
+        serializer.save()
+    
+    def perform_destroy(self, instance):
+        # Only admins can delete reservations
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can delete reservations")
+        instance.delete()
 
 
 @api_view(['POST'])

@@ -3,6 +3,7 @@ import { reservationService, Reservation } from '../services/reservationService'
 import { customerService, Customer } from '../services/customerService';
 import { roomService, Room } from '../services/roomService';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const Reservations: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -17,6 +18,8 @@ const Reservations: React.FC = () => {
     room: '',
   });
   const { addToast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   const [formData, setFormData] = useState({
     customer: '',
@@ -105,8 +108,12 @@ const Reservations: React.FC = () => {
       await reservationService.deleteReservation(reservation_number);
       addToast('success', 'Reservation deleted successfully');
       fetchReservations();
-    } catch (error) {
-      addToast('error', 'Failed to delete reservation');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        addToast('error', 'Only admins can delete reservations');
+      } else {
+        addToast('error', 'Failed to delete reservation');
+      }
     }
   };
 
@@ -124,13 +131,17 @@ const Reservations: React.FC = () => {
       setEditingReservation(null);
       fetchReservations();
     } catch (error: any) {
-      const errors = error.response?.data;
-      if (typeof errors === 'object') {
-        Object.entries(errors).forEach(([field, messages]) => {
-          addToast('error', `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`);
-        });
+      if (error.response?.status === 403) {
+        addToast('error', 'Only admins can create or update reservations');
       } else {
-        addToast('error', 'Failed to save reservation');
+        const errors = error.response?.data;
+        if (typeof errors === 'object') {
+          Object.entries(errors).forEach(([field, messages]) => {
+            addToast('error', `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`);
+          });
+        } else {
+          addToast('error', 'Failed to save reservation');
+        }
       }
     }
   };

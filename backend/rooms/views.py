@@ -9,9 +9,16 @@ from .serializers import RoomSerializer, RoomTypeSerializer, RoomSearchSerialize
 
 
 class RoomTypeListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]  # Changed from [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     queryset = RoomType.objects.all()
     serializer_class = RoomTypeSerializer
+    
+    def perform_create(self, serializer):
+        # Only admins can create room types
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can create room types")
+        serializer.save()
 
 
 class RoomTypeDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -32,9 +39,23 @@ class RoomListCreateView(generics.ListCreateAPIView):
 
 
 class RoomDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     queryset = Room.objects.select_related('room_type').all()
     serializer_class = RoomSerializer
+    
+    def perform_update(self, serializer):
+        # Only admins can update rooms
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can update rooms")
+        serializer.save()
+    
+    def perform_destroy(self, instance):
+        # Only admins can delete rooms
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can delete rooms")
+        instance.delete()
 
 
 @api_view(['GET'])
