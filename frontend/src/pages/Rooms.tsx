@@ -33,8 +33,14 @@ const Rooms: React.FC = () => {
 
   useEffect(() => {
     console.log('Rooms component mounted');
-    fetchRooms();
-    fetchRoomTypes();
+    const loadData = async () => {
+      try {
+        await Promise.all([fetchRooms(), fetchRoomTypes()]);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
+    };
+    loadData();
   }, []);
 
   const fetchRooms = async () => {
@@ -58,9 +64,10 @@ const Rooms: React.FC = () => {
         console.warn('Unexpected data structure:', data);
         setRooms([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load rooms:', error);
-      addToast('error', 'Failed to load rooms');
+      console.error('Error details:', error.response?.data || error.message);
+      addToast('error', `Failed to load rooms: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -97,6 +104,7 @@ const Rooms: React.FC = () => {
         setRooms([]);
       }
     } catch (error) {
+      console.error('Filter error:', error);
       addToast('error', 'Failed to filter rooms');
     } finally {
       setLoading(false);
@@ -191,12 +199,16 @@ const Rooms: React.FC = () => {
   console.log('Room types:', roomTypes);
   console.log('Is admin:', isAdmin);
 
+  // Ensure we always have valid data
+  const safeRooms = Array.isArray(rooms) ? rooms : [];
+  const safeRoomTypes = Array.isArray(roomTypes) ? roomTypes : [];
+
   try {
     return (
-      <div>
+      <div style={{ minHeight: '100vh', backgroundColor: '#F8F7F3', padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
-            <h1 style={{ marginBottom: '0.5rem' }}>Rooms</h1>
+            <h1 style={{ marginBottom: '0.5rem', color: '#0F172A' }}>Rooms</h1>
             <p style={{ color: '#6B7280' }}>Manage your hotel rooms</p>
           </div>
           {isAdmin && (
@@ -218,7 +230,7 @@ const Rooms: React.FC = () => {
                 onChange={(e) => setFilters({ ...filters, room_type: e.target.value })}
               >
                 <option value="">All Types</option>
-                {roomTypes.map((type) => (
+                {safeRoomTypes.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.name}
                   </option>
@@ -276,7 +288,7 @@ const Rooms: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {rooms.length === 0 ? (
+              {safeRooms.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 7 : 6} style={{ textAlign: 'center', padding: '2rem' }}>
                     <div className="empty-state">
@@ -287,7 +299,7 @@ const Rooms: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                rooms.map((room) => (
+                safeRooms.map((room) => (
                   <tr key={room.id}>
                     <td style={{ fontWeight: 600 }}>{room.room_number}</td>
                     <td>{room.room_type_name}</td>
@@ -355,7 +367,7 @@ const Rooms: React.FC = () => {
                     required
                   >
                     <option value="">Select type</option>
-                    {roomTypes.map((type) => (
+                    {safeRoomTypes.map((type) => (
                       <option key={type.id} value={type.id}>
                         {type.name} (${parseFloat(type.base_price as string).toFixed(2)}/night)
                       </option>
