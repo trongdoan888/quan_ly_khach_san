@@ -47,27 +47,28 @@ const Rooms: React.FC = () => {
     try {
       setLoading(true);
       console.log('Fetching rooms...');
-      const data = await roomService.getRooms();
-      console.log('Rooms API response:', data);
-      console.log('Response type:', typeof data);
-      console.log('Is array:', Array.isArray(data));
-      console.log('Has results:', 'results' in data);
+      const response = await roomService.getRooms();
+      console.log('Rooms API response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Is array:', Array.isArray(response));
+      console.log('Has results:', 'results' in response);
       
       // Handle different response structures
-      if (Array.isArray(data)) {
-        console.log('Processing as array, length:', data.length);
-        setRooms(data);
-      } else if ('results' in data) {
-        console.log('Processing as paginated response, results:', data.results);
-        setRooms(data.results);
+      if (Array.isArray(response)) {
+        console.log('Processing as array, length:', response.length);
+        setRooms(response);
+      } else if (response && 'results' in response) {
+        console.log('Processing as paginated response, results:', response.results);
+        setRooms(response.results);
       } else {
-        console.warn('Unexpected data structure:', data);
+        console.warn('Unexpected data structure:', response);
         setRooms([]);
       }
     } catch (error: any) {
       console.error('Failed to load rooms:', error);
       console.error('Error details:', error.response?.data || error.message);
       addToast('error', `Failed to load rooms: ${error.message || 'Unknown error'}`);
+      setRooms([]); // Set empty array on error to prevent blank screen
     } finally {
       setLoading(false);
     }
@@ -76,12 +77,22 @@ const Rooms: React.FC = () => {
   const fetchRoomTypes = async () => {
     try {
       console.log('Fetching room types...');
-      const data = await roomService.getRoomTypes();
-      console.log('Room types data:', data);
-      setRoomTypes(data);
-    } catch (error) {
+      const response = await roomService.getRoomTypes();
+      console.log('Room types data:', response);
+      console.log('Room types type:', typeof response);
+      console.log('Is array:', Array.isArray(response));
+      
+      if (Array.isArray(response)) {
+        setRoomTypes(response);
+      } else {
+        console.warn('Room types response is not an array:', response);
+        setRoomTypes([]);
+      }
+    } catch (error: any) {
       console.error('Failed to load room types:', error);
-      addToast('error', 'Failed to load room types');
+      console.error('Error details:', error.response?.data || error.message);
+      addToast('error', `Failed to load room types: ${error.message || 'Unknown error'}`);
+      setRoomTypes([]); // Set empty array on error
     }
   };
 
