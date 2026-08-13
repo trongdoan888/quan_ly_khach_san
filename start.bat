@@ -188,137 +188,66 @@ if "%REMOTE%"=="true" set BACKEND_HOST=0.0.0.0
 
 echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
 
-if "%BCK%"=="true" (
-    echo Starting backend in background...
-    set BACKEND_LOG=%BACKEND_DIR%backend.log
-    set BACKEND_PID_FILE=%BACKEND_DIR%backend.pid
-    
-    REM Start in background using start /B
-    start /B "" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT% > "%BACKEND_LOG%" 2>&1
-    
-    REM Get the PID of the last started process
-    timeout /t 2 /nobreak >nul
-    for /f "tokens=2" %%A in ('tasklist /FI "IMAGENAME eq python.exe" ^| findstr "manage.py"') do (
-        set BACKEND_PID=%%A
-    )
-    
-    if defined BACKEND_PID (
-        echo %BACKEND_PID% > "%BACKEND_PID_FILE%"
-        echo [SUCCESS] Backend started in background (PID: %BACKEND_PID%)
-        echo [INFO] Logs: %BACKEND_LOG%
-    ) else (
-        echo [WARNING] Could not determine backend PID
-    )
-) else (
-    echo Starting backend in foreground...
-    echo [WARNING] Press Ctrl+C to stop the server
-    echo.
-    
-    "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
-    
-    echo.
-    echo [WARNING] Backend stopped
+echo Starting backend in background...
+
+REM Start backend using separate batch file
+start "" "%SCRIPT_DIR%start_backend.bat"
+
+REM Wait a moment for backend to start
+timeout /t 3 /nobreak >nul
+
+echo [SUCCESS] Backend started in background
+echo [INFO] Backend running in separate window
+
+REM Start Frontend
+echo.
+echo ========================================
+echo Starting Frontend
+echo ========================================
+
+if not exist "%FRONTEND_DIR%" (
+    echo [ERROR] Frontend directory not found
+    exit /b 1
 )
 
-REM Start Frontend (only if not in background mode or if background mode with separate handling)
-if "%BCK%"=="false" (
-    echo.
-    echo ========================================
-    echo Starting Frontend
-    echo ========================================
-    
-    if not exist "%FRONTEND_DIR%" (
-        echo [ERROR] Frontend directory not found
+cd /d "%FRONTEND_DIR%"
+
+REM Check if node_modules exists
+if not exist "node_modules" (
+    echo [WARNING] node_modules not found. Running npm install...
+    npm.cmd install
+    if errorlevel 1 (
+        echo [ERROR] Failed to install frontend dependencies
+        cd /d "%ORIGINAL_DIR%"
         exit /b 1
-    )
-    
-    cd /d "%FRONTEND_DIR%"
-    
-    REM Check if node_modules exists
-    if not exist "node_modules" (
-        echo [WARNING] node_modules not found. Running npm install...
-        npm install
-    )
-    
-    REM Determine host and port
-    set FRONTEND_HOST=localhost
-    if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
-    
-    echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
-    echo.
-    
-    REM Update vite config for remote access
-    if "%REMOTE%"=="true" (
-        echo Configuring Vite for remote access...
-        set VITE_CONFIG=%FRONTEND_DIR%\vite.config.ts
-        if exist "%VITE_CONFIG%" (
-            powershell -Command "(Get-Content '%VITE_CONFIG%') -replace \"host: 'localhost'\", \"host: '0.0.0.0'\" | Set-Content '%VITE_CONFIG%'"
-        )
-    )
-    
-    echo Starting frontend...
-    echo [WARNING] Press Ctrl+C to stop the server
-    echo.
-    
-    npm run dev
-    
-    echo.
-    echo [WARNING] Frontend stopped
-) else (
-    echo.
-    echo ========================================
-    echo Starting Frontend (Background)
-    echo ========================================
-    
-    if not exist "%FRONTEND_DIR%" (
-        echo [ERROR] Frontend directory not found
-        exit /b 1
-    )
-    
-    cd /d "%FRONTEND_DIR%"
-    
-    REM Check if node_modules exists
-    if not exist "node_modules" (
-        echo [WARNING] node_modules not found. Running npm install...
-        npm install
-    )
-    
-    REM Determine host and port
-    set FRONTEND_HOST=localhost
-    if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
-    
-    echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
-    
-    REM Update vite config for remote access
-    if "%REMOTE%"=="true" (
-        echo Configuring Vite for remote access...
-        set VITE_CONFIG=%FRONTEND_DIR%\vite.config.ts
-        if exist "%VITE_CONFIG%" (
-            powershell -Command "(Get-Content '%VITE_CONFIG%') -replace \"host: 'localhost'\", \"host: '0.0.0.0'\" | Set-Content '%VITE_CONFIG%'"
-        )
-    )
-    
-    echo Starting frontend in background...
-    set FRONTEND_LOG=%FRONTEND_DIR%frontend.log
-    set FRONTEND_PID_FILE=%FRONTEND_DIR%frontend.pid
-    
-    REM Start in background using start /B
-    start /B "" npm run dev > "%FRONTEND_LOG%" 2>&1
-    
-    REM Get the PID of the last started process
-    timeout /t 2 /nobreak >nul
-    for /f "tokens=2" %%A in ('tasklist /FI "IMAGENAME eq node.exe" ^| findstr "npm"') do (
-        set FRONTEND_PID=%%A
-    )
-    
-    if defined FRONTEND_PID (
-        echo %FRONTEND_PID% > "%FRONTEND_PID_FILE%"
-        echo [SUCCESS] Frontend started in background (PID: %FRONTEND_PID%)
-        echo [INFO] Logs: %FRONTEND_LOG%
-    ) else (
-        echo [WARNING] Could not determine frontend PID
     )
 )
+
+REM Determine host and port
+set FRONTEND_HOST=localhost
+if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
+
+echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
+
+REM Update vite config for remote access
+if "%REMOTE%"=="true" (
+    echo Configuring Vite for remote access...
+    set VITE_CONFIG=%FRONTEND_DIR%\vite.config.ts
+    if exist "%VITE_CONFIG%" (
+        powershell -Command "(Get-Content '%VITE_CONFIG%') -replace \"host: 'localhost'\", \"host: '0.0.0.0'\" | Set-Content '%VITE_CONFIG%'"
+    )
+)
+
+echo Starting frontend in background...
+
+REM Start frontend using separate batch file
+start "" "%SCRIPT_DIR%start_frontend.bat"
+
+REM Wait a moment for frontend to start
+timeout /t 3 /nobreak >nul
+
+echo [SUCCESS] Frontend started in background
+echo [INFO] Frontend running in separate window
 
 REM Final summary
 echo.
@@ -329,17 +258,13 @@ echo.
 echo [SUCCESS] Backend API: http://%LOCAL_IP%:%BACKEND_PORT%/api
 echo [SUCCESS] Frontend UI: http://%LOCAL_IP%:%FRONTEND_PORT%
 echo.
+echo Both services are running in separate windows.
+echo To stop services, close the respective windows or use Ctrl+C in each window.
+echo.
 echo Demo credentials:
 echo   Admin: admin / admin123
 echo   Staff: staff / staff123
 echo.
-
-if "%BCK%"=="true" (
-    echo To stop services:
-    echo   Run: stop.bat
-    echo   Or manually kill processes using the PIDs
-    echo.
-)
 
 REM Return to original directory
 cd /d "%ORIGINAL_DIR%"
