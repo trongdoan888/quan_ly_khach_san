@@ -78,11 +78,14 @@ REM Get local IP address if remote mode
 set LOCAL_IP=localhost
 if "%REMOTE%"=="true" (
     REM Try to get local IP using ipconfig
-    for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /i "IPv4 Address" ^| findstr /v "127.0.0.1"') do (
-        set LOCAL_IP=%%A
-        goto :found_ip
+    for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /i "IPv4 Address"') do (
+        echo %%A | findstr /v "127.0.0.1" >nul
+        if not errorlevel 1 (
+            set LOCAL_IP=%%A
+            goto :ip_found
+        )
     )
-    :found_ip
+    :ip_found
     if "!LOCAL_IP!"=="localhost" (
         set LOCAL_IP=0.0.0.0
     )
