@@ -206,15 +206,15 @@ const Rooms: React.FC = () => {
     );
   }
 
-  console.log('Rendering rooms page with', safeRooms.length, 'rooms');
-  console.log('Rooms data:', safeRooms);
-  console.log('Loading state:', loading);
-  console.log('Room types:', safeRoomTypes);
-  console.log('Is admin:', isAdmin);
-
   // Ensure we always have valid data
   const finalRooms = Array.isArray(rooms) ? rooms : [];
   const finalRoomTypes = Array.isArray(roomTypes) ? roomTypes : [];
+
+  console.log('Rendering rooms page with', finalRooms.length, 'rooms');
+  console.log('Rooms data:', finalRooms);
+  console.log('Loading state:', loading);
+  console.log('Room types:', finalRoomTypes);
+  console.log('Is admin:', isAdmin);
 
   try {
     return (
