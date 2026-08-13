@@ -15,7 +15,7 @@ class Reservation(models.Model):
     
     reservation_number = models.CharField(max_length=20, unique=True, primary_key=True)
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
-    room = models.ForeignKey(Room, on_delete=models.PROTECT, related_name='reservations')
+    room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservations')
     check_in_date = models.DateField()
     check_out_date = models.DateField()
     number_of_guests = models.IntegerField()
@@ -45,30 +45,31 @@ class Reservation(models.Model):
             raise ValidationError({"check_out_date": "Check-out date must be after check-in date."})
         
         # Validate number of guests doesn't exceed room capacity
-        if self.number_of_guests > self.room.capacity:
+        if self.room and self.number_of_guests > self.room.capacity:
             raise ValidationError({"number_of_guests": f"Number of guests cannot exceed room capacity of {self.room.capacity}."})
         
         # Validate room is not in maintenance
-        if self.room.status == 'maintenance':
+        if self.room and self.room.status == 'maintenance':
             raise ValidationError({"room": "Cannot book a room that is under maintenance."})
         
         # Check for double booking (critical business rule)
-        # Exclude cancelled reservations from the check
-        overlapping_reservations = Reservation.objects.filter(
-            room=self.room,
-            booking_status__in=['pending', 'confirmed', 'completed']
-        ).exclude(
-            reservation_number=self.reservation_number if self.reservation_number else None
-        ).filter(
-            # Overlap condition: existing_check_in < requested_check_out AND existing_check_out > requested_check_in
-            check_in_date__lt=self.check_out_date,
-            check_out_date__gt=self.check_in_date
-        )
-        
-        if overlapping_reservations.exists():
-            raise ValidationError({
-                "room": "This room is already booked for the selected dates. Please choose different dates or another room."
-            })
+        # Only check if room is set
+        if self.room:
+            overlapping_reservations = Reservation.objects.filter(
+                room=self.room,
+                booking_status__in=['pending', 'confirmed', 'completed']
+            ).exclude(
+                reservation_number=self.reservation_number if self.reservation_number else None
+            ).filter(
+                # Overlap condition: existing_check_in < requested_check_out AND existing_check_out > requested_check_in
+                check_in_date__lt=self.check_out_date,
+                check_out_date__gt=self.check_in_date
+            )
+            
+            if overlapping_reservations.exists():
+                raise ValidationError({
+                    "room": "This room is already booked for the selected dates. Please choose different dates or another room."
+                })
     
     def save(self, *args, **kwargs):
         self.full_clean()
