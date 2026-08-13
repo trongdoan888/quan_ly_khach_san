@@ -199,7 +199,7 @@ echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
 
 echo Starting backend in background...
 cd /d "%BACKEND_DIR%"
-start /MIN "" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
+start "" /MIN cmd /c %VENV_PYTHON% manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
 cd /d "%ORIGINAL_DIR%"
 
 REM Wait a moment for backend to start
@@ -273,7 +273,7 @@ echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
 
 echo Starting frontend in background...
 cd /d "%FRONTEND_DIR%"
-start /MIN "" cmd /c npm.cmd run dev
+start "" /MIN cmd /c npm.cmd run dev
 cd /d "%ORIGINAL_DIR%"
 
 REM Wait a moment for frontend to start
