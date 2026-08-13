@@ -36,6 +36,8 @@ NO_COLLECTSTATIC=false
 DEV=false
 CHECK=false
 SKIP_NODE=false
+SEED_DATA=false
+PURGE_DATA=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -69,6 +71,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-node)
             SKIP_NODE=true
+            shift
+            ;;
+        --seed-data)
+            SEED_DATA=true
+            shift
+            ;;
+        --purge-seed-data)
+            PURGE_DATA=true
             shift
             ;;
         *)
@@ -240,12 +250,20 @@ fi
 # Load seed data
 echo_info "Loading seed data..."
 if [ "$CHECK" = false ]; then
-    python seed_data.py
+    if [ "$PURGE_DATA" = true ]; then
+        echo_info "Purging sample data (customers, rooms, reservations)..."
+        python seed_data.py --purge
+    elif [ "$SEED_DATA" = true ]; then
+        echo_info "Generating sample data (50 customers, 80 rooms, 3 months of reservations)..."
+        python seed_data.py --sample
+    else
+        python seed_data.py
+    fi
     if [ $? -ne 0 ]; then
-        echo_warning "Seed data loading failed or already loaded"
+        echo_warning "Seed data operation failed"
     fi
 fi
-echo_success "Seed data loaded"
+echo_success "Seed data operation completed"
 
 # Collect static files
 if [ "$NO_COLLECTSTATIC" = false ]; then

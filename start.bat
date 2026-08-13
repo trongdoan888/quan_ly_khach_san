@@ -12,6 +12,7 @@ set MULTIPLE=false
 set BACKEND_PORT=8000
 set FRONTEND_PORT=3000
 set SEED_DATA=false
+set PURGE_DATA=false
 
 REM Parse arguments
 :parse_args
@@ -54,6 +55,11 @@ if /i "%~1"=="--port" (
 )
 if /i "%~1"=="--seed-data" (
     set SEED_DATA=true
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--purge-seed-data" (
+    set PURGE_DATA=true
     shift
     goto parse_args
 )
@@ -222,6 +228,23 @@ if "%SEED_DATA%"=="true" (
         echo [WARNING] Sample data loading failed
     ) else (
         echo [SUCCESS] Sample data loaded
+    )
+    cd /d "%ORIGINAL_DIR%"
+)
+
+REM Purge sample data if requested
+if "%PURGE_DATA%"=="true" (
+    echo.
+    echo ========================================
+    echo Purging Sample Data
+    echo ========================================
+    echo Purging sample data (customers, rooms, reservations)...
+    cd /d "%BACKEND_DIR%"
+    "%VENV_PYTHON%" seed_data.py --purge
+    if errorlevel 1 (
+        echo [WARNING] Sample data purging failed
+    ) else (
+        echo [SUCCESS] Sample data purged
     )
     cd /d "%ORIGINAL_DIR%"
 )

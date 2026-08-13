@@ -420,9 +420,43 @@ def seed_data():
     print(f"Created {Reservation.objects.count()} reservations")
 
 
+def purge_sample_data():
+    """Purge all sample data (customers, rooms, reservations)"""
+    print("Purging sample data...")
+    
+    # Count before deletion
+    reservation_count = Reservation.objects.count()
+    room_count = Room.objects.count()
+    customer_count = Customer.objects.count()
+    
+    # Delete in correct order (respecting foreign keys)
+    print(f"Deleting {reservation_count} reservations...")
+    Reservation.objects.all().delete()
+    
+    print(f"Deleting {room_count} rooms...")
+    Room.objects.all().delete()
+    
+    print(f"Deleting {customer_count} customers...")
+    Customer.objects.all().delete()
+    
+    print("\n" + "="*50)
+    print("Sample data purged successfully!")
+    print("="*50)
+    print(f"Deleted:")
+    print(f"  Reservations: {reservation_count}")
+    print(f"  Rooms: {room_count}")
+    print(f"  Customers: {customer_count}")
+    print("="*50)
+
+
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == '--sample':
-        generate_sample_data()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '--sample':
+            generate_sample_data()
+        elif sys.argv[1] == '--purge':
+            purge_sample_data()
+        else:
+            print("Unknown option. Use --sample for sample data or --purge to purge data.")
     else:
         seed_data()

@@ -112,11 +112,15 @@ start.bat
 | `--check` | Check if everything is installed without making changes |
 | `--skip-node` | Skip Node.js check (backend-only setup) |
 | `--seed-data` | Generate sample data (50 customers, 80 rooms, 3 months of reservations) |
+| `--purge-seed-data` | Remove all sample data (customers, rooms, reservations) |
 
 **Examples:**
 ```cmd
 # Full setup with sample data
 setup.bat --seed-data
+
+# Purge existing sample data
+setup.bat --purge-seed-data
 
 # Quick setup with PostgreSQL and sample data
 setup.bat --postgres --seed-data
@@ -135,6 +139,7 @@ setup.bat --dev --seed-data
 | `--multiple` | Allow multiple instances without killing existing processes |
 | `--port` | Specify custom ports (backend_port frontend_port) |
 | `--seed-data` | Load sample data after starting backend (50 customers, 80 rooms, 3 months) |
+| `--purge-seed-data` | Remove all sample data after starting backend |
 
 **Examples:**
 ```cmd
@@ -143,6 +148,9 @@ start.bat
 
 # Start with sample data
 start.bat --seed-data
+
+# Purge existing sample data
+start.bat --purge-seed-data
 
 # Remote access with PostgreSQL and sample data
 start.bat --remote --postgres --seed-data
@@ -237,6 +245,9 @@ python seed_data.py
 
 # Or generate extensive sample data (50 customers, 80 rooms, 3 months of reservations)
 python seed_data.py --sample
+
+# Or purge all sample data (customers, rooms, reservations)
+python seed_data.py --purge
 ```
 
 **Sample Data Details:**
@@ -245,6 +256,7 @@ python seed_data.py --sample
 - Room distribution: 50% Standard, 35% Deluxe, 15% Suite
 - Reservation statuses: pending, confirmed, completed, cancelled
 - Random pricing based on floor, room type, and capacity
+- **Purge (--purge)**: Removes all customers, rooms, and reservations (preserves users and room types)
 
 7. **Start the development server**
 ```bash

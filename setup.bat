@@ -26,6 +26,7 @@ set DEV=false
 set CHECK=false
 set SKIP_NODE=false
 set SEED_DATA=false
+set PURGE_DATA=false
 
 REM Parse arguments
 :parse_args
@@ -72,6 +73,11 @@ if /i "%~1"=="--skip-node" (
 )
 if /i "%~1"=="--seed-data" (
     set SEED_DATA=true
+    shift
+    goto parse_args
+)
+if /i "%~1"=="--purge-seed-data" (
+    set PURGE_DATA=true
     shift
     goto parse_args
 )
@@ -261,17 +267,20 @@ if "%CREATE_SU%"=="true" (
 REM Load seed data
 echo Loading seed data...
 if not "%CHECK%"=="true" (
-    if "%SEED_DATA%"=="true" (
+    if "%PURGE_DATA%"=="true" (
+        echo [INFO] Purging sample data (customers, rooms, reservations)...
+        "%VENV_PYTHON%" seed_data.py --purge
+    ) else if "%SEED_DATA%"=="true" (
         echo [INFO] Generating sample data (50 customers, 80 rooms, 3 months of reservations)...
         "%VENV_PYTHON%" seed_data.py --sample
     ) else (
         "%VENV_PYTHON%" seed_data.py
     )
     if errorlevel 1 (
-        echo [WARNING] Seed data loading failed or already loaded
+        echo [WARNING] Seed data operation failed
     )
 )
-echo [SUCCESS] Seed data loaded
+echo [SUCCESS] Seed data operation completed
 
 REM Collect static files
 if "%NO_COLLECTSTATIC%"=="false" (

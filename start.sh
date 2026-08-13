@@ -34,6 +34,8 @@ BCK=false
 MULTIPLE=false
 BACKEND_PORT=8000
 FRONTEND_PORT=3000
+SEED_DATA=false
+PURGE_DATA=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -68,6 +70,14 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             FRONTEND_PORT="$1"
+            shift
+            ;;
+        --seed-data)
+            SEED_DATA=true
+            shift
+            ;;
+        --purge-seed-data)
+            PURGE_DATA=true
             shift
             ;;
         *)
@@ -233,6 +243,40 @@ else
     "$VENV_PYTHON" manage.py runserver "$BACKEND_HOST:$BACKEND_PORT"
     
     # Return to original directory after stopping
+    cd "$ORIGINAL_DIR"
+fi
+
+# Load sample data if requested
+if [ "$SEED_DATA" = true ]; then
+    echo ""
+    echo_info "========================================"
+    echo_info "Loading Sample Data"
+    echo_info "========================================"
+    echo_info "Loading sample data (50 customers, 80 rooms, 3 months of reservations)..."
+    cd "$BACKEND_DIR"
+    "$VENV_PYTHON" seed_data.py --sample
+    if [ $? -eq 0 ]; then
+        echo_success "Sample data loaded"
+    else
+        echo_warning "Sample data loading failed"
+    fi
+    cd "$ORIGINAL_DIR"
+fi
+
+# Purge sample data if requested
+if [ "$PURGE_DATA" = true ]; then
+    echo ""
+    echo_info "========================================"
+    echo_info "Purging Sample Data"
+    echo_info "========================================"
+    echo_info "Purging sample data (customers, rooms, reservations)..."
+    cd "$BACKEND_DIR"
+    "$VENV_PYTHON" seed_data.py --purge
+    if [ $? -eq 0 ]; then
+        echo_success "Sample data purged"
+    else
+        echo_warning "Sample data purging failed"
+    fi
     cd "$ORIGINAL_DIR"
 fi
 
