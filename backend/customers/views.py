@@ -41,7 +41,10 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save()
     
     def perform_destroy(self, instance):
-        # Admins can delete customers
+        # Only admins can delete customers
+        if self.request.user.role != 'admin':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Only admins can delete customers")
         instance.delete()
 
 
