@@ -100,7 +100,9 @@ echo.
 REM Check prerequisites
 echo Checking prerequisites...
 echo [INFO] Checking Python...
+echo [DEBUG] Starting Python check...
 where python >nul 2>&1
+echo [DEBUG] where python returned errorlevel: %errorlevel%
 if errorlevel 1 (
     echo [ERROR] Python is not installed or not in PATH
     echo [INFO] Please install Python 3.8 or higher from: https://www.python.org/
@@ -110,9 +112,12 @@ if errorlevel 1 (
 )
 echo [SUCCESS] Python found
 python --version
+echo [DEBUG] Completed Python check
 
 echo [INFO] Checking pip...
+echo [DEBUG] Starting pip check...
 where pip >nul 2>&1
+echo [DEBUG] where pip returned errorlevel: %errorlevel%
 if errorlevel 1 (
     echo [ERROR] pip is not installed or not in PATH
     echo [INFO] pip should be installed with Python
@@ -121,29 +126,40 @@ if errorlevel 1 (
     exit /b 1
 )
 echo [SUCCESS] pip found
+echo [DEBUG] Completed pip check
 
 echo [INFO] Checking Node.js...
+echo [DEBUG] Starting Node.js check...
 where node >nul 2>&1
+echo [DEBUG] where node returned errorlevel: %errorlevel%
 if errorlevel 1 (
     echo [WARNING] Node.js is not installed
     echo [INFO] Please install Node.js manually to enable frontend setup
     echo [INFO] Download Node.js LTS from: https://nodejs.org/
     echo [INFO] After installation, restart your terminal and run setup again
     echo [INFO] Or use --skip-node flag to skip Node.js installation (backend only)
+    echo [DEBUG] SKIP_NODE flag: %SKIP_NODE%
     if "%SKIP_NODE%"=="false" (
+        echo [DEBUG] Exiting because Node.js not found and SKIP_NODE is false
         cd /d "%ORIGINAL_DIR%"
         endlocal
         exit /b 1
     )
+    echo [DEBUG] Continuing despite Node.js not found because SKIP_NODE is true
 ) else (
     echo [SUCCESS] Node.js is already installed
     node --version
     npm --version
 )
+echo [DEBUG] Completed Node.js check
+
+echo [DEBUG] Completed Node.js check
+echo [DEBUG] About to print Prerequisites check complete message...
 
 echo [SUCCESS] Prerequisites check complete
 echo.
-echo [DEBUG] Press any key to continue to backend setup...
+
+echo [DEBUG] About to show pause...
 pause
 
 REM Backend Setup
