@@ -18,6 +18,9 @@ const Rooms: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
 
+  console.log('Rooms component - user:', user);
+  console.log('Rooms component - isAdmin:', isAdmin);
+
   const [formData, setFormData] = useState({
     room_number: '',
     room_type: '',
@@ -29,6 +32,7 @@ const Rooms: React.FC = () => {
   });
 
   useEffect(() => {
+    console.log('Rooms component mounted');
     fetchRooms();
     fetchRoomTypes();
   }, []);
@@ -36,6 +40,7 @@ const Rooms: React.FC = () => {
   const fetchRooms = async () => {
     try {
       setLoading(true);
+      console.log('Fetching rooms...');
       const data = await roomService.getRooms();
       console.log('Rooms API response:', data);
       console.log('Response type:', typeof data);
@@ -44,7 +49,7 @@ const Rooms: React.FC = () => {
       
       // Handle different response structures
       if (Array.isArray(data)) {
-        console.log('Processing as array');
+        console.log('Processing as array, length:', data.length);
         setRooms(data);
       } else if ('results' in data) {
         console.log('Processing as paginated response, results:', data.results);
@@ -63,6 +68,7 @@ const Rooms: React.FC = () => {
 
   const fetchRoomTypes = async () => {
     try {
+      console.log('Fetching room types...');
       const data = await roomService.getRoomTypes();
       console.log('Room types data:', data);
       setRoomTypes(data);
@@ -171,6 +177,7 @@ const Rooms: React.FC = () => {
   };
 
   if (loading) {
+    console.log('Showing loading spinner');
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
         <div className="spinner"></div>
@@ -180,20 +187,24 @@ const Rooms: React.FC = () => {
 
   console.log('Rendering rooms page with', rooms.length, 'rooms');
   console.log('Rooms data:', rooms);
+  console.log('Loading state:', loading);
+  console.log('Room types:', roomTypes);
+  console.log('Is admin:', isAdmin);
 
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ marginBottom: '0.5rem' }}>Rooms</h1>
-          <p style={{ color: '#6B7280' }}>Manage your hotel rooms</p>
+  try {
+    return (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div>
+            <h1 style={{ marginBottom: '0.5rem' }}>Rooms</h1>
+            <p style={{ color: '#6B7280' }}>Manage your hotel rooms</p>
+          </div>
+          {isAdmin && (
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+              <span>➕</span> Add Room
+            </button>
+          )}
         </div>
-        {isAdmin && (
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <span>➕</span> Add Room
-          </button>
-        )}
-      </div>
 
       {/* Filters */}
       <div className="card" style={{ marginBottom: '1.5rem' }}>
@@ -424,6 +435,15 @@ const Rooms: React.FC = () => {
       )}
     </div>
   );
+  } catch (error) {
+    console.error('Error rendering Rooms page:', error);
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <h2 style={{ color: '#EF4444' }}>Error loading rooms</h2>
+        <p style={{ color: '#6B7280' }}>Please check the console for details</p>
+      </div>
+    );
+  }
 };
 
 export default Rooms;
