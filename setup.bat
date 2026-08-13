@@ -73,11 +73,13 @@ if /i "%~1"=="--skip-node" (
 )
 if /i "%~1"=="--seed-data" (
     set SEED_DATA=true
+    set SKIP_NODE=true
     shift
     goto parse_args
 )
 if /i "%~1"=="--purge-seed-data" (
     set PURGE_DATA=true
+    set SKIP_NODE=true
     shift
     goto parse_args
 )

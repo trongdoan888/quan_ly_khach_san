@@ -75,10 +75,12 @@ while [[ $# -gt 0 ]]; do
             ;;
         --seed-data)
             SEED_DATA=true
+            SKIP_NODE=true
             shift
             ;;
         --purge-seed-data)
             PURGE_DATA=true
+            SKIP_NODE=true
             shift
             ;;
         *)
