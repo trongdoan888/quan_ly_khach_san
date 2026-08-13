@@ -38,3 +38,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['role'] = user.role
         token['email'] = user.email
         return token
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        # Add user information to the response
+        user = self.user
+        data['user'] = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': user.role,
+        }
+        return data

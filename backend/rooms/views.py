@@ -9,7 +9,7 @@ from .serializers import RoomSerializer, RoomTypeSerializer, RoomSearchSerialize
 
 
 class RoomTypeListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]  # Changed from [IsAuthenticated, IsAdminUser]
     queryset = RoomType.objects.all()
     serializer_class = RoomTypeSerializer
 

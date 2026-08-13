@@ -31,12 +31,12 @@ export interface AuthResponse {
 export const authService = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await api.post('/auth/login/', credentials);
-    const { access, refresh } = response.data;
+    const { access, refresh, user } = response.data;
     
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
     
-    return response.data;
+    return { access, refresh, user };
   },
 
   register: async (data: RegisterData): Promise<any> => {

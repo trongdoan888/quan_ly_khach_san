@@ -16,8 +16,9 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      await login({ username, password });
+      const result = await login({ username, password });
       addToast('success', 'Login successful!');
+      // Navigate immediately after successful login
       navigate('/dashboard');
     } catch (error: any) {
       addToast('error', error.response?.data?.detail || 'Login failed. Please try again.');
