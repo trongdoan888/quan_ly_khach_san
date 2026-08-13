@@ -45,7 +45,7 @@ export interface RoomSearchParams {
 }
 
 export const roomService = {
-  getRooms: async (params?: any): Promise<{ results: Room[]; count: number }> => {
+  getRooms: async (params?: any): Promise<{ results: Room[]; count: number } | Room[]> => {
     const response = await api.get('/rooms/', { params });
     return response.data;
   },

@@ -41,10 +41,8 @@ const Rooms: React.FC = () => {
       // Handle different response structures
       if (Array.isArray(data)) {
         setRooms(data);
-      } else if (data.results) {
+      } else if ('results' in data) {
         setRooms(data.results);
-      } else if (data.data) {
-        setRooms(data.data);
       } else {
         console.warn('Unexpected data structure:', data);
         setRooms([]);
@@ -81,10 +79,8 @@ const Rooms: React.FC = () => {
       // Handle different response structures
       if (Array.isArray(data)) {
         setRooms(data);
-      } else if (data.results) {
+      } else if ('results' in data) {
         setRooms(data.results);
-      } else if (data.data) {
-        setRooms(data.data);
       } else {
         setRooms([]);
       }
