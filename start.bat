@@ -158,18 +158,14 @@ if "%MULTIPLE%"=="false" (
     netstat -ano | findstr ":8000" >nul
     if not errorlevel 1 (
         echo [WARNING] Port 8000 is in use, attempting to free it...
-        for /f "tokens=5" %%A in ('netstat -ano ^| findstr ":8000"') do (
-            taskkill /F /PID %%A >nul 2>&1
-        )
+        taskkill /F /IM python.exe >nul 2>&1
         timeout /t 2 /nobreak >nul
     )
 
     netstat -ano | findstr ":3000" >nul
     if not errorlevel 1 (
         echo [WARNING] Port 3000 is in use, attempting to free it...
-        for /f "tokens=5" %%A in ('netstat -ano ^| findstr ":3000"') do (
-            taskkill /F /PID %%A >nul 2>&1
-        )
+        taskkill /F /IM node.exe >nul 2>&1
         timeout /t 2 /nobreak >nul
     )
 
@@ -207,7 +203,7 @@ echo Starting backend in background...
 
 REM Start backend in background
 cd /d "%BACKEND_DIR%"
-start /MIN "" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
+start /MIN "" cmd /c "%VENV_PYTHON% manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%"
 cd /d "%ORIGINAL_DIR%"
 
 REM Wait a moment for backend to start
