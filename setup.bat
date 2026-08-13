@@ -158,9 +158,13 @@ echo [DEBUG] About to print Prerequisites check complete message...
 
 echo [SUCCESS] Prerequisites check complete
 echo.
-
-echo [DEBUG] About to show pause...
+echo [DEBUG] Reached this point successfully
+echo [DEBUG] Press any key to continue...
 pause
+
+echo [DEBUG] About to show Backend Setup section...
+
+REM Backend Setup
 
 REM Backend Setup
 echo ========================================
