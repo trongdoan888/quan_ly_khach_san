@@ -191,8 +191,6 @@ if not exist "%VENV_PYTHON%" (
     exit /b 1
 )
 
-cd /d "%BACKEND_DIR%"
-
 REM Determine host and port
 set BACKEND_HOST=127.0.0.1
 if "%REMOTE%"=="true" set BACKEND_HOST=0.0.0.0
@@ -200,10 +198,7 @@ if "%REMOTE%"=="true" set BACKEND_HOST=0.0.0.0
 echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
 
 echo Starting backend in background...
-
-REM Start backend in background
-echo Starting backend...
-start /MIN /D "%BACKEND_DIR%" "" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
+start /MIN cmd /c "cd /d %BACKEND_DIR% && title Hotel Backend && %VENV_PYTHON% manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%"
 
 REM Wait a moment for backend to start
 timeout /t 3 /nobreak >nul
@@ -255,17 +250,17 @@ if not exist "%FRONTEND_DIR%" (
     exit /b 1
 )
 
-cd /d "%FRONTEND_DIR%"
-
 REM Check if node_modules exists
-if not exist "node_modules" (
+if not exist "%FRONTEND_DIR%\node_modules" (
     echo [WARNING] node_modules not found. Running npm install...
+    cd /d "%FRONTEND_DIR%"
     npm.cmd install
     if errorlevel 1 (
         echo [ERROR] Failed to install frontend dependencies
         cd /d "%ORIGINAL_DIR%"
         exit /b 1
     )
+    cd /d "%ORIGINAL_DIR%"
 )
 
 REM Determine host and port
@@ -274,26 +269,15 @@ if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
 
 echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
 
-REM Update vite config for remote access
-if "%REMOTE%"=="true" (
-    echo Configuring Vite for remote access...
-    set VITE_CONFIG=%FRONTEND_DIR%\vite.config.ts
-    if exist "%VITE_CONFIG%" (
-        powershell -NoProfile -NonInteractive -Command "(Get-Content '%VITE_CONFIG%') -replace \"host: 'localhost'\", \"host: '0.0.0.0'\" | Set-Content '%VITE_CONFIG%'"
-    )
-)
-
 echo Starting frontend in background...
-
-REM Start frontend in background
-cd /d "%FRONTEND_DIR%"
-start /MIN "" cmd /c "npm.cmd run dev"
-cd /d "%ORIGINAL_DIR%"
+start /MIN cmd /c "cd /d %FRONTEND_DIR% && title Hotel Frontend && npm.cmd run dev"
 
 REM Wait a moment for frontend to start
 timeout /t 3 /nobreak >nul
 
 echo [SUCCESS] Frontend started in background
+
+cd /d "%ORIGINAL_DIR%"
 
 REM Final summary
 echo.
