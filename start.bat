@@ -202,10 +202,8 @@ echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
 echo Starting backend in background...
 
 REM Start backend in background
-cd /d "%BACKEND_DIR%"
-echo Starting: %VENV_PYTHON% manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
-start /MIN cmd /c "%VENV_PYTHON% manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%"
-cd /d "%ORIGINAL_DIR%"
+echo Starting backend...
+start /MIN /D "%BACKEND_DIR%" "" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
 
 REM Wait a moment for backend to start
 timeout /t 3 /nobreak >nul
