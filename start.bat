@@ -190,8 +190,8 @@ echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
 
 echo Starting backend in background...
 
-REM Start backend using separate batch file
-start "" "%SCRIPT_DIR%start_backend.bat"
+REM Start backend in background using separate window
+start "Hotel Backend" "%BACKEND_DIR%\start_backend.bat"
 
 REM Wait a moment for backend to start
 timeout /t 3 /nobreak >nul
@@ -240,8 +240,8 @@ if "%REMOTE%"=="true" (
 
 echo Starting frontend in background...
 
-REM Start frontend using separate batch file
-start "" "%SCRIPT_DIR%start_frontend.bat"
+REM Start frontend in background using separate window
+start "Hotel Frontend" "%FRONTEND_DIR%\start_frontend.bat"
 
 REM Wait a moment for frontend to start
 timeout /t 3 /nobreak >nul
@@ -259,7 +259,7 @@ echo [SUCCESS] Backend API: http://%LOCAL_IP%:%BACKEND_PORT%/api
 echo [SUCCESS] Frontend UI: http://%LOCAL_IP%:%FRONTEND_PORT%
 echo.
 echo Both services are running in separate windows.
-echo To stop services, close the respective windows or use Ctrl+C in each window.
+echo To stop services, close the respective windows.
 echo.
 echo Demo credentials:
 echo   Admin: admin / admin123
