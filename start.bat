@@ -190,14 +190,15 @@ echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
 
 echo Starting backend in background...
 
-REM Start backend in background using separate window
-start "Hotel Backend" "%BACKEND_DIR%\start_backend.bat"
+REM Start backend in background
+cd /d "%BACKEND_DIR%"
+start /MIN "" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
+cd /d "%ORIGINAL_DIR%"
 
 REM Wait a moment for backend to start
 timeout /t 3 /nobreak >nul
 
 echo [SUCCESS] Backend started in background
-echo [INFO] Backend running in separate window
 
 REM Start Frontend
 echo.
@@ -240,14 +241,15 @@ if "%REMOTE%"=="true" (
 
 echo Starting frontend in background...
 
-REM Start frontend in background using separate window
-start "Hotel Frontend" "%FRONTEND_DIR%\start_frontend.bat"
+REM Start frontend in background
+cd /d "%FRONTEND_DIR%"
+start /MIN "" cmd /c "npm.cmd run dev"
+cd /d "%ORIGINAL_DIR%"
 
 REM Wait a moment for frontend to start
 timeout /t 3 /nobreak >nul
 
 echo [SUCCESS] Frontend started in background
-echo [INFO] Frontend running in separate window
 
 REM Final summary
 echo.
@@ -258,8 +260,8 @@ echo.
 echo [SUCCESS] Backend API: http://%LOCAL_IP%:%BACKEND_PORT%/api
 echo [SUCCESS] Frontend UI: http://%LOCAL_IP%:%FRONTEND_PORT%
 echo.
-echo Both services are running in separate windows.
-echo To stop services, close the respective windows.
+echo Both services are running in background.
+echo To stop services, close this terminal or use Ctrl+C.
 echo.
 echo Demo credentials:
 echo   Admin: admin / admin123
