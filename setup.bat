@@ -8,6 +8,14 @@ REM Get script directory and save original directory
 set SCRIPT_DIR=%~dp0
 set ORIGINAL_DIR=%cd%
 
+echo ========================================
+echo Hotel Reservation System - Setup
+echo ========================================
+echo.
+echo [INFO] Script directory: %SCRIPT_DIR%
+echo [INFO] Current directory: %ORIGINAL_DIR%
+echo.
+
 REM Initialize variables
 set POSTGRES=false
 set CREATE_SU=false
@@ -61,7 +69,7 @@ if /i "%~1"=="--skip-node" (
     shift
     goto parse_args
 )
-echo Unknown option: %~1
+echo [ERROR] Unknown option: %~1
 cd /d "%ORIGINAL_DIR%"
 endlocal
 exit /b 1
@@ -71,19 +79,13 @@ REM Set directory paths
 set BACKEND_DIR=%SCRIPT_DIR%backend
 set FRONTEND_DIR=%SCRIPT_DIR%frontend
 
-echo ========================================
-echo Hotel Reservation System - Setup
-echo ========================================
+echo [INFO] Backend directory: %BACKEND_DIR%
+echo [INFO] Frontend directory: %FRONTEND_DIR%
 echo.
-
-REM Check mode
-if "%CHECK%"=="true" (
-    echo Running in CHECK mode - no changes will be made
-    echo.
-)
 
 REM Check prerequisites
 echo Checking prerequisites...
+echo [INFO] Checking Python...
 where python >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Python is not installed or not in PATH
@@ -92,7 +94,10 @@ if errorlevel 1 (
     endlocal
     exit /b 1
 )
+echo [SUCCESS] Python found
+python --version
 
+echo [INFO] Checking pip...
 where pip >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] pip is not installed or not in PATH
@@ -101,7 +106,9 @@ if errorlevel 1 (
     endlocal
     exit /b 1
 )
+echo [SUCCESS] pip found
 
+echo [INFO] Checking Node.js...
 where node >nul 2>&1
 if errorlevel 1 (
     echo [WARNING] Node.js is not installed
@@ -121,26 +128,39 @@ if errorlevel 1 (
 )
 
 echo [SUCCESS] Prerequisites check complete
-echo .
+echo.
 
 REM Backend Setup
 echo ========================================
 echo Backend Setup
 echo ========================================
 
+echo [INFO] Checking backend directory...
 if not exist "%BACKEND_DIR%" (
     echo [ERROR] Backend directory not found: %BACKEND_DIR%
     cd /d "%ORIGINAL_DIR%"
     endlocal
     exit /b 1
 )
+echo [SUCCESS] Backend directory found
 
+echo [INFO] Changing to backend directory...
 cd /d "%BACKEND_DIR%"
+if errorlevel 1 (
+    echo [ERROR] Failed to change to backend directory: %BACKEND_DIR%
+    echo [INFO] Error code: %errorlevel%
+    cd /d "%ORIGINAL_DIR%"
+    endlocal
+    exit /b 1
+)
+echo [SUCCESS] Changed to backend directory
+echo Current directory: %cd%
 
 REM Check/create virtual environment
 set VENV_DIR=%BACKEND_DIR%venv
 set VENV_PYTHON=%VENV_DIR%\Scripts\python.exe
 
+echo [INFO] Checking virtual environment...
 if "%FORCE%"=="true" (
     if exist "%VENV_DIR%" (
         echo [WARNING] Force mode: Removing existing virtual environment...
@@ -151,53 +171,40 @@ if "%FORCE%"=="true" (
 )
 
 if not exist "%VENV_DIR%" (
-    echo Creating virtual environment...
+    echo [INFO] Creating virtual environment...
     if not "%CHECK%"=="true" (
-        REM Try to create venv
         python -m venv venv
         if errorlevel 1 (
             echo [ERROR] Failed to create virtual environment
-            echo [INFO] Trying alternative method...
-            REM Clean up failed attempt
+            echo [INFO] Trying with --clear flag...
             if exist "%VENV_DIR%" rmdir /s /q "%VENV_DIR%"
-            REM Try with --clear flag
             python -m venv --clear venv
             if errorlevel 1 (
-                echo [ERROR] Virtual environment creation failed completely
-                cd /d "%ORIGINAL_DIR%"
-                endlocal
-                exit /b 1
+                echo [ERROR] Virtual environment creation failed
+                echo [INFO] Will use system Python instead
+                set VENV_PYTHON=python
             )
         )
-        REM Verify venv was created successfully
-        if not exist "%VENV_PYTHON%" (
-            echo [ERROR] Virtual environment creation failed - python.exe not found
-            echo [INFO] Cleaning up failed venv and using system Python instead
-            if exist "%VENV_DIR%" rmdir /s /q "%VENV_DIR%"
-            set VENV_PYTHON=python
-        )
-    )
-    if exist "%VENV_PYTHON%" (
-        echo [SUCCESS] Virtual environment created
-    ) else (
-        echo [WARNING] Using system Python instead of virtual environment
     )
 ) else (
     echo [SUCCESS] Virtual environment already exists
 )
 
+if exist "%VENV_PYTHON%" (
+    echo [SUCCESS] Virtual environment ready
+) else (
+    echo [WARNING] Using system Python instead of virtual environment
+    set VENV_PYTHON=python
+)
+
+echo [INFO] Python to use: %VENV_PYTHON%
+
 REM Activate virtual environment and upgrade pip
-echo Activating virtual environment...
+echo [INFO] Upgrading pip...
 if not "%CHECK%"=="true" (
-    if exist "%VENV_PYTHON%" (
-        "%VENV_PYTHON%" -m pip install --upgrade pip
-        if errorlevel 1 (
-            echo [WARNING] Failed to upgrade pip in virtual environment, trying system pip
-            python -m pip install --upgrade pip
-        )
-    ) else (
-        echo [WARNING] Virtual environment python not found, using system Python
-        python -m pip install --upgrade pip
+    "%VENV_PYTHON%" -m pip install --upgrade pip
+    if errorlevel 1 (
+        echo [WARNING] Failed to upgrade pip, continuing anyway
     )
 )
 
@@ -205,26 +212,12 @@ REM Install dependencies
 if "%SKIP_DEPS%"=="false" (
     echo Installing Python dependencies...
     if not "%CHECK%"=="true" (
-        if exist "%VENV_PYTHON%" (
-            "%VENV_PYTHON%" -m pip install -r requirements.txt
-            if errorlevel 1 (
-                echo [WARNING] Failed to install dependencies in virtual environment, trying system pip
-                python -m pip install -r requirements.txt
-                if errorlevel 1 (
-                    echo [ERROR] Failed to install Python dependencies
-                    cd /d "%ORIGINAL_DIR%"
-                    exit /b 1
-                )
-            )
-        ) else (
-            echo [WARNING] Virtual environment not found, using system Python
-            python -m pip install -r requirements.txt
-            if errorlevel 1 (
-                echo [ERROR] Failed to install Python dependencies
-                cd /d "%ORIGINAL_DIR%"
-                endlocal
-                exit /b 1
-            )
+        "%VENV_PYTHON%" -m pip install -r requirements.txt
+        if errorlevel 1 (
+            echo [ERROR] Failed to install Python dependencies
+            cd /d "%ORIGINAL_DIR%"
+            endlocal
+            exit /b 1
         )
     )
     echo [SUCCESS] Python dependencies installed
@@ -232,27 +225,11 @@ if "%SKIP_DEPS%"=="false" (
     echo [WARNING] Skipping Python dependency installation
 )
 
-REM Configure database if needed
-if "%POSTGRES%"=="true" (
-    echo Configuring for PostgreSQL...
-    set ENV_FILE=%BACKEND_DIR%.env
-    if exist "%ENV_FILE%" (
-        REM Using CMD to replace values in .env file
-        powershell -NoProfile -NonInteractive -Command "(Get-Content '%ENV_FILE%') -replace 'DB_NAME=.*', 'DB_NAME=hotel_reservation' -replace 'DB_USER=.*', 'DB_USER=postgres' -replace 'DB_PASSWORD=.*', 'DB_PASSWORD=postgres' -replace 'DB_HOST=.*', 'DB_HOST=localhost' -replace 'DB_PORT=.*', 'DB_PORT=5432' | Set-Content '%ENV_FILE%'"
-    )
-    echo [SUCCESS] PostgreSQL configured
-)
-
 REM Run migrations
 echo Running database migrations...
 if not "%CHECK%"=="true" (
-    if exist "%VENV_PYTHON%" (
-        "%VENV_PYTHON%" manage.py makemigrations
-        "%VENV_PYTHON%" manage.py migrate
-    ) else (
-        python manage.py makemigrations
-        python manage.py migrate
-    )
+    "%VENV_PYTHON%" manage.py makemigrations
+    "%VENV_PYTHON%" manage.py migrate
     if errorlevel 1 (
         echo [ERROR] Failed to run migrations
         cd /d "%ORIGINAL_DIR%"
@@ -266,11 +243,7 @@ REM Create superuser
 if "%CREATE_SU%"=="true" (
     echo Creating superuser...
     if not "%CHECK%"=="true" (
-        if exist "%VENV_PYTHON%" (
-            echo from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@hotel.com', 'admin123') if not User.objects.filter(username='admin').exists() else None | "%VENV_PYTHON%" manage.py shell
-        ) else (
-            echo from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@hotel.com', 'admin123') if not User.objects.filter(username='admin').exists() else None | python manage.py shell
-        )
+        echo from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@hotel.com', 'admin123') if not User.objects.filter(username='admin').exists() else None | "%VENV_PYTHON%" manage.py shell
         if errorlevel 1 (
             echo [WARNING] Superuser may already exist or creation failed
         ) else (
@@ -282,11 +255,7 @@ if "%CREATE_SU%"=="true" (
 REM Load seed data
 echo Loading seed data...
 if not "%CHECK%"=="true" (
-    if exist "%VENV_PYTHON%" (
-        "%VENV_PYTHON%" seed_data.py
-    ) else (
-        python seed_data.py
-    )
+    "%VENV_PYTHON%" seed_data.py
     if errorlevel 1 (
         echo [WARNING] Seed data loading failed or already loaded
     )
@@ -297,11 +266,7 @@ REM Collect static files
 if "%NO_COLLECTSTATIC%"=="false" (
     echo Collecting static files...
     if not "%CHECK%"=="true" (
-        if exist "%VENV_PYTHON%" (
-            "%VENV_PYTHON%" manage.py collectstatic --noinput
-        ) else (
-            python manage.py collectstatic --noinput
-        )
+        "%VENV_PYTHON%" manage.py collectstatic --noinput
     )
     echo [SUCCESS] Static files collected
 ) else (
@@ -319,6 +284,8 @@ echo ========================================
 where node >nul 2>&1
 where npm >nul 2>&1
 if not errorlevel 1 (
+    echo [INFO] Node.js available, setting up frontend...
+    
     if not exist "%FRONTEND_DIR%" (
         echo [ERROR] Frontend directory not found: %FRONTEND_DIR%
         cd /d "%ORIGINAL_DIR%"
