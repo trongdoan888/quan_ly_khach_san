@@ -38,10 +38,16 @@ const Rooms: React.FC = () => {
       setLoading(true);
       const data = await roomService.getRooms();
       console.log('Rooms API response:', data);
+      console.log('Response type:', typeof data);
+      console.log('Is array:', Array.isArray(data));
+      console.log('Has results:', 'results' in data);
+      
       // Handle different response structures
       if (Array.isArray(data)) {
+        console.log('Processing as array');
         setRooms(data);
       } else if ('results' in data) {
+        console.log('Processing as paginated response, results:', data.results);
         setRooms(data.results);
       } else {
         console.warn('Unexpected data structure:', data);
@@ -103,7 +109,7 @@ const Rooms: React.FC = () => {
       room_type: room.room_type.toString(),
       floor: room.floor,
       capacity: room.capacity,
-      price_per_night: room.price_per_night,
+      price_per_night: parseFloat(room.price_per_night as string),
       status: room.status,
       description: room.description,
     });
@@ -276,7 +282,7 @@ const Rooms: React.FC = () => {
                     <td>{room.room_type_name}</td>
                     <td>{room.floor}</td>
                     <td>{room.capacity} guests</td>
-                    <td>${room.price_per_night.toFixed(2)}</td>
+                    <td>${parseFloat(room.price_per_night as string).toFixed(2)}</td>
                     <td>{getStatusBadge(room.status)}</td>
                     {isAdmin && (
                       <td>
@@ -340,7 +346,7 @@ const Rooms: React.FC = () => {
                     <option value="">Select type</option>
                     {roomTypes.map((type) => (
                       <option key={type.id} value={type.id}>
-                        {type.name} (${type.base_price}/night)
+                        {type.name} (${parseFloat(type.base_price as string).toFixed(2)}/night)
                       </option>
                     ))}
                   </select>

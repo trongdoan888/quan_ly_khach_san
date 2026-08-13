@@ -4,7 +4,7 @@ export interface RoomType {
   id: number;
   name: string;
   description: string;
-  base_price: number;
+  base_price: number | string;
   created_at: string;
   updated_at: string;
 }
@@ -17,7 +17,7 @@ export interface Room {
   room_type_details: RoomType;
   floor: number;
   capacity: number;
-  price_per_night: number;
+  price_per_night: number | string;
   status: 'available' | 'occupied' | 'maintenance';
   description: string;
   created_at: string;
