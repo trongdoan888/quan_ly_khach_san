@@ -198,7 +198,9 @@ if "%REMOTE%"=="true" set BACKEND_HOST=0.0.0.0
 echo Backend URL: http://%LOCAL_IP%:%BACKEND_PORT%/api
 
 echo Starting backend in background...
-start /MIN cmd /c "cd /d %BACKEND_DIR% && %VENV_PYTHON% manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%"
+cd /d "%BACKEND_DIR%"
+start /MIN "" "%VENV_PYTHON%" manage.py runserver %BACKEND_HOST%:%BACKEND_PORT%
+cd /d "%ORIGINAL_DIR%"
 
 REM Wait a moment for backend to start
 timeout /t 3 /nobreak >nul
@@ -270,7 +272,9 @@ if "%REMOTE%"=="true" set FRONTEND_HOST=0.0.0.0
 echo Frontend URL: http://%LOCAL_IP%:%FRONTEND_PORT%
 
 echo Starting frontend in background...
-start /MIN cmd /c "cd /d %FRONTEND_DIR% && npm.cmd run dev"
+cd /d "%FRONTEND_DIR%"
+start /MIN "" cmd /c npm.cmd run dev
+cd /d "%ORIGINAL_DIR%"
 
 REM Wait a moment for frontend to start
 timeout /t 3 /nobreak >nul
