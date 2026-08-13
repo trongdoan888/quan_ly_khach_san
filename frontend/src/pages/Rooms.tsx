@@ -206,19 +206,30 @@ const Rooms: React.FC = () => {
     );
   }
 
-  console.log('Rendering rooms page with', rooms.length, 'rooms');
-  console.log('Rooms data:', rooms);
+  console.log('Rendering rooms page with', safeRooms.length, 'rooms');
+  console.log('Rooms data:', safeRooms);
   console.log('Loading state:', loading);
-  console.log('Room types:', roomTypes);
+  console.log('Room types:', safeRoomTypes);
   console.log('Is admin:', isAdmin);
 
   // Ensure we always have valid data
-  const safeRooms = Array.isArray(rooms) ? rooms : [];
-  const safeRoomTypes = Array.isArray(roomTypes) ? roomTypes : [];
+  const finalRooms = Array.isArray(rooms) ? rooms : [];
+  const finalRoomTypes = Array.isArray(roomTypes) ? roomTypes : [];
 
   try {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#F8F7F3', padding: '2rem' }}>
+        {/* Debug: Always visible header */}
+        <div style={{ backgroundColor: '#C9A227', color: '#0F172A', padding: '1rem', marginBottom: '2rem', borderRadius: '8px' }}>
+          <h2 style={{ margin: 0 }}>Rooms Page Debug</h2>
+          <p style={{ margin: '0.5rem 0 0 0' }}>
+            Loading: {loading ? 'Yes' : 'No'} | 
+            Rooms: {finalRooms.length} | 
+            Room Types: {finalRoomTypes.length} | 
+            Admin: {isAdmin ? 'Yes' : 'No'}
+          </p>
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
             <h1 style={{ marginBottom: '0.5rem', color: '#0F172A' }}>Rooms</h1>
@@ -243,7 +254,7 @@ const Rooms: React.FC = () => {
                 onChange={(e) => setFilters({ ...filters, room_type: e.target.value })}
               >
                 <option value="">All Types</option>
-                {safeRoomTypes.map((type) => (
+                {finalRoomTypes.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.name}
                   </option>
@@ -301,7 +312,7 @@ const Rooms: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {safeRooms.length === 0 ? (
+              {finalRooms.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 7 : 6} style={{ textAlign: 'center', padding: '2rem' }}>
                     <div className="empty-state">
@@ -312,7 +323,7 @@ const Rooms: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                safeRooms.map((room) => (
+                finalRooms.map((room) => (
                   <tr key={room.id}>
                     <td style={{ fontWeight: 600 }}>{room.room_number}</td>
                     <td>{room.room_type_name}</td>
@@ -380,7 +391,7 @@ const Rooms: React.FC = () => {
                     required
                   >
                     <option value="">Select type</option>
-                    {safeRoomTypes.map((type) => (
+                    {finalRoomTypes.map((type) => (
                       <option key={type.id} value={type.id}>
                         {type.name} (${parseFloat(type.base_price as string).toFixed(2)}/night)
                       </option>
