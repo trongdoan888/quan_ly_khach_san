@@ -197,21 +197,6 @@ if [ "$POSTGRES" = true ]; then
     echo_success "PostgreSQL configured"
 fi
 
-# Configure frontend API URL if custom ports are used or remote mode
-if [ "$BACKEND_PORT" != "8000" ] || [ "$REMOTE" = true ]; then
-    echo_info "Configuring frontend API URL..."
-    FRONTEND_ENV="$FRONTEND_DIR/.env"
-    if [ -f "$FRONTEND_ENV" ]; then
-        # Remove the old line and add the new one
-        sed -i.bak '/VITE_API_URL=/d' "$FRONTEND_ENV"
-        echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" >> "$FRONTEND_ENV"
-    else
-        # Create .env file if it doesn't exist
-        echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
-    fi
-    echo_success "Frontend API URL configured to: http://$LOCAL_IP:$BACKEND_PORT/api"
-fi
-
 # Start Backend
 echo_info "========================================"
 echo_info "Starting Backend"
@@ -332,17 +317,12 @@ if [ "$BCK" = false ]; then
                 sed -i.bak "/port: 3000,/a\    host: '0.0.0.0'," "$VITE_CONFIG"
             fi
         fi
-        # Set API URL for remote access
-        export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
-        # Update .env file
+        # Set API URL for remote access - update .env file before starting
         FRONTEND_ENV="$FRONTEND_DIR/.env"
-        if [ -f "$FRONTEND_ENV" ]; then
-            sed -i.bak '/VITE_API_URL=/d' "$FRONTEND_ENV"
-            echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" >> "$FRONTEND_ENV"
-        else
-            echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
-        fi
+        echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
         echo_info "API URL configured to: http://$LOCAL_IP:$BACKEND_PORT/api"
+        # Also set as environment variable for this session
+        export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
     fi
     
     echo_info "Starting frontend..."
@@ -391,17 +371,12 @@ else
                 sed -i.bak "/port: 3000,/a\    host: '0.0.0.0'," "$VITE_CONFIG"
             fi
         fi
-        # Set API URL for remote access
-        export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
-        # Update .env file
+        # Set API URL for remote access - update .env file before starting
         FRONTEND_ENV="$FRONTEND_DIR/.env"
-        if [ -f "$FRONTEND_ENV" ]; then
-            sed -i.bak '/VITE_API_URL=/d' "$FRONTEND_ENV"
-            echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" >> "$FRONTEND_ENV"
-        else
-            echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
-        fi
+        echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
         echo_info "API URL configured to: http://$LOCAL_IP:$BACKEND_PORT/api"
+        # Also set as environment variable for this session
+        export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
     fi
     
     echo_info "Starting frontend in background..."
