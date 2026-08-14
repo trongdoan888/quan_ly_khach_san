@@ -194,7 +194,7 @@ const Availability: React.FC = () => {
                   </div>
                   <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '1rem', marginBottom: '1rem' }}>
                     <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#C9A227', marginBottom: '0.25rem' }}>
-                      ${parseFloat(room.price_per_night).toFixed(2)}
+                      ${parseFloat(String(room.price_per_night)).toFixed(2)}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>per night</div>
                   </div>

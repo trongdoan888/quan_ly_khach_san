@@ -19,7 +19,6 @@ const Reservations: React.FC = () => {
   });
   const { addToast } = useToast();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
 
   const [formData, setFormData] = useState({
     customer: '',
@@ -60,7 +59,7 @@ const Reservations: React.FC = () => {
   const fetchRooms = async () => {
     try {
       const data = await roomService.getRooms();
-      setRooms(data.results);
+      setRooms(Array.isArray(data) ? data : data.results);
     } catch (error) {
       addToast('error', 'Failed to load rooms');
     }

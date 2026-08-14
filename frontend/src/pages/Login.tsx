@@ -16,7 +16,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const result = await login({ username, password });
+      await login({ username, password });
       addToast('success', 'Login successful!');
       navigate('/dashboard');
     } catch (error: any) {
@@ -355,9 +355,9 @@ const Login: React.FC = () => {
                 borderRadius: '8px',
                 fontSize: '1rem',
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: loading ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
-                disabled: loading ? { opacity: 0.6, cursor: 'not-allowed' } : {},
+                opacity: loading ? 0.6 : 1,
               }}
               disabled={loading}
               onMouseEnter={(e) => {

@@ -11,7 +11,6 @@ const Customers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { addToast } = useToast();
   const { user } = useAuth();
-  const isAdmin = user?.role === 'admin';
 
   const [formData, setFormData] = useState({
     customer_id: '',

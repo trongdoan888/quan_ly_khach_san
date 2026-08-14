@@ -25,7 +25,7 @@ const Rooms: React.FC = () => {
 
   const [formData, setFormData] = useState({
     room_number: '',
-    room_type: '',
+    room_type: 0,
     floor: 1,
     capacity: 2,
     price_per_night: 100,
@@ -166,11 +166,16 @@ const Rooms: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const submitData = {
+        ...formData,
+        room_type: Number(formData.room_type),
+      };
+      
       if (editingRoom) {
-        await roomService.updateRoom(editingRoom.id, formData);
+        await roomService.updateRoom(editingRoom.id, submitData);
         addToast('success', 'Room updated successfully');
       } else {
-        await roomService.createRoom(formData);
+        await roomService.createRoom(submitData);
         addToast('success', 'Room created successfully');
       }
       setShowModal(false);
@@ -378,7 +383,7 @@ const Rooms: React.FC = () => {
                   <select
                     className="form-select"
                     value={formData.room_type}
-                    onChange={(e) => setFormData({ ...formData, room_type: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, room_type: Number(e.target.value) })}
                     required
                   >
                     <option value="">Select type</option>
