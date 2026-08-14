@@ -34,6 +34,9 @@ const Availability: React.FC = () => {
         number_of_guests: numberOfGuests,
       });
       
+      console.log('Availability response:', response);
+      console.log('Available rooms:', response.available_rooms);
+      
       setAvailableRooms(response.available_rooms);
       setSearched(true);
       
@@ -43,6 +46,7 @@ const Availability: React.FC = () => {
         addToast('success', `Found ${response.available_rooms.length} available room(s)`);
       }
     } catch (error: any) {
+      console.error('Availability check error:', error);
       addToast('error', error.response?.data?.error || 'Failed to check availability');
     } finally {
       setLoading(false);
@@ -134,7 +138,7 @@ const Availability: React.FC = () => {
             </p>
           </div>
 
-          {availableRooms.length === 0 ? (
+          {!availableRooms || availableRooms.length === 0 ? (
             <div className="card">
               <div className="empty-state">
                 <div className="empty-state-icon">🔍</div>
@@ -182,7 +186,7 @@ const Availability: React.FC = () => {
                       <span className="badge badge-success">{room.status}</span>
                     </div>
                     <p style={{ color: '#6B7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                      {room.room_type_name}
+                      {room.room_type_name || 'Unknown Room Type'}
                     </p>
                     <p style={{ color: '#6B7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
                       Floor {room.floor} • Capacity: {room.capacity} guests
@@ -190,7 +194,7 @@ const Availability: React.FC = () => {
                   </div>
                   <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '1rem', marginBottom: '1rem' }}>
                     <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#C9A227', marginBottom: '0.25rem' }}>
-                      ${room.price_per_night.toFixed(2)}
+                      ${parseFloat(room.price_per_night).toFixed(2)}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#6B7280' }}>per night</div>
                   </div>
