@@ -87,7 +87,13 @@ export const reservationService = {
   },
 
   checkAvailability: async (data: AvailabilityCheckData): Promise<AvailabilityResponse> => {
-    const response = await api.post('/reservations/check-availability/', data);
+    const params: any = {
+      check_in_date: data.check_in_date,
+      check_out_date: data.check_out_date,
+    };
+    if (data.room) params.room = data.room;
+    if (data.number_of_guests) params.number_of_guests = data.number_of_guests;
+    const response = await api.get('/reservations/check-availability/', { params });
     return response.data;
   },
 

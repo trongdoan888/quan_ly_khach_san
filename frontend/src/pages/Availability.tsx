@@ -29,7 +29,6 @@ const Availability: React.FC = () => {
       
       // First, get all available rooms for the dates
       const response = await reservationService.checkAvailability({
-        room: 0, // This will be ignored by the backend when checking all rooms
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
         number_of_guests: numberOfGuests,
