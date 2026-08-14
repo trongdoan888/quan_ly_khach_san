@@ -153,6 +153,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://10.19.18.58:3000",
 ]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for development
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
