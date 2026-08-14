@@ -209,7 +209,7 @@ if [ "$BACKEND_PORT" != "8000" ] || [ "$REMOTE" = true ]; then
         # Create .env file if it doesn't exist
         echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
     fi
-    echo_success "Frontend API URL configured"
+    echo_success "Frontend API URL configured to: http://$LOCAL_IP:$BACKEND_PORT/api"
 fi
 
 # Start Backend
@@ -334,6 +334,15 @@ if [ "$BCK" = false ]; then
         fi
         # Set API URL for remote access
         export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
+        # Update .env file
+        FRONTEND_ENV="$FRONTEND_DIR/.env"
+        if [ -f "$FRONTEND_ENV" ]; then
+            sed -i.bak '/VITE_API_URL=/d' "$FRONTEND_ENV"
+            echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" >> "$FRONTEND_ENV"
+        else
+            echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
+        fi
+        echo_info "API URL configured to: http://$LOCAL_IP:$BACKEND_PORT/api"
     fi
     
     echo_info "Starting frontend..."
@@ -384,6 +393,15 @@ else
         fi
         # Set API URL for remote access
         export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
+        # Update .env file
+        FRONTEND_ENV="$FRONTEND_DIR/.env"
+        if [ -f "$FRONTEND_ENV" ]; then
+            sed -i.bak '/VITE_API_URL=/d' "$FRONTEND_ENV"
+            echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" >> "$FRONTEND_ENV"
+        else
+            echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
+        fi
+        echo_info "API URL configured to: http://$LOCAL_IP:$BACKEND_PORT/api"
     fi
     
     echo_info "Starting frontend in background..."
