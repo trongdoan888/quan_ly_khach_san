@@ -324,7 +324,13 @@ if [ "$BCK" = false ]; then
         VITE_CONFIG="$FRONTEND_DIR/vite.config.ts"
         if [ -f "$VITE_CONFIG" ]; then
             echo_info "Configuring Vite for remote access..."
-            sed -i.bak "s/host: 'localhost'/host: '0.0.0.0'/g" "$VITE_CONFIG"
+            # Check if host setting exists, if not add it
+            if grep -q "host:" "$VITE_CONFIG"; then
+                sed -i.bak "s/host: 'localhost'/host: '0.0.0.0'/g" "$VITE_CONFIG"
+            else
+                # Add host setting after port setting
+                sed -i.bak "/port: 3000,/a\    host: '0.0.0.0'," "$VITE_CONFIG"
+            fi
         fi
         # Set API URL for remote access
         export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
@@ -368,7 +374,13 @@ else
         VITE_CONFIG="$FRONTEND_DIR/vite.config.ts"
         if [ -f "$VITE_CONFIG" ]; then
             echo_info "Configuring Vite for remote access..."
-            sed -i.bak "s/host: 'localhost'/host: '0.0.0.0'/g" "$VITE_CONFIG"
+            # Check if host setting exists, if not add it
+            if grep -q "host:" "$VITE_CONFIG"; then
+                sed -i.bak "s/host: 'localhost'/host: '0.0.0.0'/g" "$VITE_CONFIG"
+            else
+                # Add host setting after port setting
+                sed -i.bak "/port: 3000,/a\    host: '0.0.0.0'," "$VITE_CONFIG"
+            fi
         fi
         # Set API URL for remote access
         export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
