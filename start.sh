@@ -197,14 +197,17 @@ if [ "$POSTGRES" = true ]; then
     echo_success "PostgreSQL configured"
 fi
 
-# Configure frontend API URL if custom ports are used
-if [ "$BACKEND_PORT" != "8000" ]; then
-    echo_info "Configuring frontend API URL for custom port..."
+# Configure frontend API URL if custom ports are used or remote mode
+if [ "$BACKEND_PORT" != "8000" ] || [ "$REMOTE" = true ]; then
+    echo_info "Configuring frontend API URL..."
     FRONTEND_ENV="$FRONTEND_DIR/.env"
     if [ -f "$FRONTEND_ENV" ]; then
         # Remove the old line and add the new one
         sed -i.bak '/VITE_API_URL=/d' "$FRONTEND_ENV"
-        echo "VITE_API_URL=http://localhost:$BACKEND_PORT/api" >> "$FRONTEND_ENV"
+        echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" >> "$FRONTEND_ENV"
+    else
+        # Create .env file if it doesn't exist
+        echo "VITE_API_URL=http://$LOCAL_IP:$BACKEND_PORT/api" > "$FRONTEND_ENV"
     fi
     echo_success "Frontend API URL configured"
 fi
@@ -224,6 +227,11 @@ cd "$BACKEND_DIR"
 
 # Determine host and port
 BACKEND_HOST=$([ "$REMOTE" = true ] && echo "0.0.0.0" || echo "127.0.0.1")
+
+# Set ALLOWED_HOSTS for remote mode
+if [ "$REMOTE" = true ]; then
+    export ALLOWED_HOSTS="localhost,127.0.0.1,0.0.0.0,$LOCAL_IP"
+fi
 
 echo_info "Backend URL: http://$LOCAL_IP:$BACKEND_PORT/api"
 
@@ -318,6 +326,8 @@ if [ "$BCK" = false ]; then
             echo_info "Configuring Vite for remote access..."
             sed -i.bak "s/host: 'localhost'/host: '0.0.0.0'/g" "$VITE_CONFIG"
         fi
+        # Set API URL for remote access
+        export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
     fi
     
     echo_info "Starting frontend..."
@@ -360,6 +370,8 @@ else
             echo_info "Configuring Vite for remote access..."
             sed -i.bak "s/host: 'localhost'/host: '0.0.0.0'/g" "$VITE_CONFIG"
         fi
+        # Set API URL for remote access
+        export VITE_API_URL="http://$LOCAL_IP:$BACKEND_PORT/api"
     fi
     
     echo_info "Starting frontend in background..."
