@@ -210,12 +210,39 @@ fi
 
 cd "$BACKEND_DIR"
 
+# Run database migrations
+echo_info "Running database migrations..."
+"$VENV_PYTHON" manage.py migrate --noinput
+if [ $? -eq 0 ]; then
+    echo_success "Database migrations completed"
+else
+    echo_error "Database migrations failed"
+    cd "$ORIGINAL_DIR"
+    exit 1
+fi
+
+# Create superuser if not exists
+echo_info "Checking for superuser..."
+SUPERUSER_EXISTS=$("$VENV_PYTHON" manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); print(User.objects.filter(username='admin').exists())" 2>/dev/null)
+if [ "$SUPERUSER_EXISTS" = "False" ] || [ -z "$SUPERUSER_EXISTS" ]; then
+    echo_info "Creating default superuser (admin/admin123)..."
+    echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@example.com', 'admin123') if not User.objects.filter(username='admin').exists() else None" | "$VENV_PYTHON" manage.py shell
+    if [ $? -eq 0 ]; then
+        echo_success "Superuser created successfully"
+    else
+        echo_warning "Superuser creation failed (may already exist)"
+    fi
+else
+    echo_success "Superuser already exists"
+fi
+
 # Determine host and port
 BACKEND_HOST=$([ "$REMOTE" = true ] && echo "0.0.0.0" || echo "127.0.0.1")
 
 # Set ALLOWED_HOSTS for remote mode
 if [ "$REMOTE" = true ]; then
     export ALLOWED_HOSTS="localhost,127.0.0.1,0.0.0.0,$LOCAL_IP"
+    export CORS_ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000,http://$LOCAL_IP:3000"
 fi
 
 echo_info "Backend URL: http://$LOCAL_IP:$BACKEND_PORT/api"
