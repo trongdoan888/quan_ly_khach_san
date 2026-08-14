@@ -110,6 +110,10 @@ if [ "$REMOTE" = true ]; then
             LOCAL_IP="0.0.0.0"
         fi
     fi
+    # Allow manual IP override via environment variable
+    if [ -n "$SERVER_IP" ]; then
+        LOCAL_IP="$SERVER_IP"
+    fi
 fi
 
 echo_info "========================================"
