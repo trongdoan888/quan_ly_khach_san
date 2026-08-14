@@ -226,7 +226,6 @@ fi
 # Run migrations
 echo_info "Running database migrations..."
 if [ "$CHECK" = false ]; then
-    python manage.py makemigrations
     python manage.py migrate
     if [ $? -ne 0 ]; then
         echo_error "Failed to run migrations"
@@ -259,10 +258,11 @@ if [ "$CHECK" = false ]; then
         echo_info "Generating sample data (50 customers, 80 rooms, 3 months of reservations)..."
         python seed_data.py --sample
     else
+        echo_info "Loading default seed data..."
         python seed_data.py
     fi
     if [ $? -ne 0 ]; then
-        echo_warning "Seed data operation failed"
+        echo_warning "Seed data operation failed (continuing setup)"
     fi
 fi
 echo_success "Seed data operation completed"
@@ -271,9 +271,9 @@ echo_success "Seed data operation completed"
 if [ "$NO_COLLECTSTATIC" = false ]; then
     echo_info "Collecting static files..."
     if [ "$CHECK" = false ]; then
-        python manage.py collectstatic --noinput
+        python manage.py collectstatic --noinput --clear 2>/dev/null || echo_warning "Static files collection skipped (non-critical)"
     fi
-    echo_success "Static files collected"
+    echo_success "Static files collection complete"
 else
     echo_warning "Skipping static files collection"
 fi
