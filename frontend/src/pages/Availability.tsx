@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { reservationService } from '../services/reservationService';
-import { roomService, Room } from '../services/roomService';
+import { Room } from '../services/roomService';
 import { useToast } from '../contexts/ToastContext';
 
 const Availability: React.FC = () => {

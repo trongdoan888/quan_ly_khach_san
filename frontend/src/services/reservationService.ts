@@ -37,7 +37,7 @@ export interface ReservationFormData {
 }
 
 export interface AvailabilityCheckData {
-  room: number;
+  room?: number;
   check_in_date: string;
   check_out_date: string;
   number_of_guests?: number;

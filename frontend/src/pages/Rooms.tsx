@@ -137,7 +137,7 @@ const Rooms: React.FC = () => {
     setEditingRoom(room);
     setFormData({
       room_number: room.room_number,
-      room_type: room.room_type.toString(),
+      room_type: typeof room.room_type === 'number' ? room.room_type : Number(room.room_type),
       floor: room.floor,
       capacity: room.capacity,
       price_per_night: parseFloat(room.price_per_night as string),

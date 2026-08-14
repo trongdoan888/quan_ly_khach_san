@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { customerService, Customer } from '../services/customerService';
 import { useToast } from '../contexts/ToastContext';
-import { useAuth } from '../contexts/AuthContext';
 
 const Customers: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -10,7 +9,6 @@ const Customers: React.FC = () => {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { addToast } = useToast();
-  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     customer_id: '',

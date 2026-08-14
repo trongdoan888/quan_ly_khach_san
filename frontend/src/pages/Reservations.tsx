@@ -3,7 +3,6 @@ import { reservationService, Reservation } from '../services/reservationService'
 import { customerService, Customer } from '../services/customerService';
 import { roomService, Room } from '../services/roomService';
 import { useToast } from '../contexts/ToastContext';
-import { useAuth } from '../contexts/AuthContext';
 
 const Reservations: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -18,7 +17,6 @@ const Reservations: React.FC = () => {
     room: '',
   });
   const { addToast } = useToast();
-  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     customer: '',
