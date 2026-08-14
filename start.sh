@@ -343,6 +343,8 @@ if [ "$BCK" = false ]; then
                 # Add host setting after port setting
                 sed -i.bak "/port: 3000,/a\    host: '0.0.0.0'," "$VITE_CONFIG"
             fi
+            # Update proxy target to use server IP instead of localhost
+            sed -i.bak "s|target: 'http://localhost:8000'|target: 'http://$LOCAL_IP:$BACKEND_PORT'|g" "$VITE_CONFIG"
         fi
         # Set API URL for remote access - update .env file before starting
         FRONTEND_ENV="$FRONTEND_DIR/.env"
@@ -397,6 +399,8 @@ else
                 # Add host setting after port setting
                 sed -i.bak "/port: 3000,/a\    host: '0.0.0.0'," "$VITE_CONFIG"
             fi
+            # Update proxy target to use server IP instead of localhost
+            sed -i.bak "s|target: 'http://localhost:8000'|target: 'http://$LOCAL_IP:$BACKEND_PORT'|g" "$VITE_CONFIG"
         fi
         # Set API URL for remote access - update .env file before starting
         FRONTEND_ENV="$FRONTEND_DIR/.env"
