@@ -24,13 +24,6 @@ class ReservationListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'POST':
             return ReservationCreateSerializer
         return ReservationSerializer
-    
-    def perform_create(self, serializer):
-        # Only admins can create reservations
-        if self.request.user.role != 'admin':
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Only admins can create reservations")
-        serializer.save()
 
 
 class ReservationDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -40,10 +33,7 @@ class ReservationDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'reservation_number'
     
     def perform_update(self, serializer):
-        # Only admins can update reservations
-        if self.request.user.role != 'admin':
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Only admins can update reservations")
+        # Both admin and staff can update reservations
         serializer.save()
     
     def perform_destroy(self, instance):
@@ -54,19 +44,32 @@ class ReservationDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def check_availability(request):
     """
     Check room availability for given dates
     """
-    serializer = AvailabilitySerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    check_in = request.query_params.get('check_in_date')
+    check_out = request.query_params.get('check_out_date')
+    room_id = request.query_params.get('room')
+    number_of_guests = request.query_params.get('number_of_guests')
     
-    data = serializer.validated_data
-    check_in = data['check_in_date']
-    check_out = data['check_out_date']
+    if not check_in or not check_out:
+        return Response(
+            {"error": "check_in_date and check_out_date are required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        from datetime import datetime
+        check_in = datetime.strptime(check_in, '%Y-%m-%d').date()
+        check_out = datetime.strptime(check_out, '%Y-%m-%d').date()
+    except ValueError:
+        return Response(
+            {"error": "Invalid date format. Use YYYY-MM-DD"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
     if check_out <= check_in:
         return Response(
@@ -78,8 +81,8 @@ def check_availability(request):
     available_rooms = Room.objects.filter(status__in=['available', 'occupied'])
     
     # If a specific room is provided, filter by it
-    if data.get('room'):
-        available_rooms = available_rooms.filter(id=data['room'])
+    if room_id:
+        available_rooms = available_rooms.filter(id=room_id)
     
     # Find rooms that have overlapping reservations (excluding cancelled)
     overlapping_reservations = Reservation.objects.filter(
@@ -92,8 +95,8 @@ def check_availability(request):
     available_rooms = available_rooms.exclude(id__in=overlapping_reservations)
     
     # Filter by number of guests if provided
-    if data.get('number_of_guests'):
-        available_rooms = available_rooms.filter(capacity__gte=data['number_of_guests'])
+    if number_of_guests:
+        available_rooms = available_rooms.filter(capacity__gte=number_of_guests)
     
     # Serialize the results
     from rooms.serializers import RoomSerializer

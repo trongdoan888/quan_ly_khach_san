@@ -18,13 +18,6 @@ class CustomerListCreateView(generics.ListCreateAPIView):
     search_fields = ['full_name', 'email', 'customer_id', 'address']
     ordering_fields = ['full_name', 'created_at']
     ordering = ['full_name']
-    
-    def perform_create(self, serializer):
-        # Only admins can create customers
-        if self.request.user.role != 'admin':
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Only admins can create customers")
-        serializer.save()
 
 
 class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -34,10 +27,7 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'customer_id'
     
     def perform_update(self, serializer):
-        # Only admins can update customers
-        if self.request.user.role != 'admin':
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Only admins can update customers")
+        # Both admin and staff can update customers
         serializer.save()
     
     def perform_destroy(self, instance):
