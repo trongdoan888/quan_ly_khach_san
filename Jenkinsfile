@@ -52,10 +52,17 @@ pipeline {
         
         stage('Deploy to Production') {
             steps {
-                sh """
-                    docker-compose pull
-                    docker-compose up -d
-                """
+                withCredentials([usernamePassword(
+                    credentialsId: 'harbor-credentials',
+                    usernameVariable: 'HARBOR_USER',
+                    passwordVariable: 'HARBOR_PASS'
+                )]) {
+                    sh """
+                        echo ${HARBOR_PASS} | docker login ${HARBOR_URL} -u ${HARBOR_USER} --password-stdin
+                        docker-compose pull
+                        docker-compose up -d
+                    """
+                }
             }
         }
     }
