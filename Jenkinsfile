@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        HARBOR_URL = 'registry'
+        HARBOR_URL = '10.19.18.58'
         HARBOR_PROJECT = 'hotel-reservation'
         GITEA_URL = 'https://gitea.com/sridharreddy7093/hotel-reservation-mgnt.git'
     }
