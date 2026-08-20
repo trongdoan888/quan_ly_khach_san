@@ -39,8 +39,12 @@ pipeline {
                         echo ${HARBOR_PASS} | docker login ${HARBOR_URL} -u ${HARBOR_USER} --password-stdin
                         docker tag hotel-reservation-backend:${BUILD_NUMBER} ${HARBOR_URL}/${HARBOR_PROJECT}/hotel-reservation-backend:${BUILD_NUMBER}
                         docker tag hotel-reservation-frontend:${BUILD_NUMBER} ${HARBOR_URL}/${HARBOR_PROJECT}/hotel-reservation-frontend:${BUILD_NUMBER}
+                        docker tag hotel-reservation-backend:${BUILD_NUMBER} ${HARBOR_URL}/${HARBOR_PROJECT}/hotel-reservation-backend:latest
+                        docker tag hotel-reservation-frontend:${BUILD_NUMBER} ${HARBOR_URL}/${HARBOR_PROJECT}/hotel-reservation-frontend:latest
                         docker push ${HARBOR_URL}/${HARBOR_PROJECT}/hotel-reservation-backend:${BUILD_NUMBER}
                         docker push ${HARBOR_URL}/${HARBOR_PROJECT}/hotel-reservation-frontend:${BUILD_NUMBER}
+                        docker push ${HARBOR_URL}/${HARBOR_PROJECT}/hotel-reservation-backend:latest
+                        docker push ${HARBOR_URL}/${HARBOR_PROJECT}/hotel-reservation-frontend:latest
                     """
                 }
             }

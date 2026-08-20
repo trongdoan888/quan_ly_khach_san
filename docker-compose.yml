@@ -2,9 +2,9 @@ version: '3.8'
 
 services:
   backend:
-    build: ./backend
+    image: 10.19.18.58/hotel-reservation/hotel-reservation-backend:latest
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - DEBUG=False
       - DB_HOST=db
@@ -13,11 +13,9 @@ services:
       - DB_PASSWORD=postgres
     depends_on:
       - db
-    volumes:
-      - ./backend:/app  # For development (hot reload)
 
   frontend:
-    build: ./frontend
+    image: 10.19.18.58/hotel-reservation/hotel-reservation-frontend:latest
     ports:
       - "3000:80"
     depends_on:
